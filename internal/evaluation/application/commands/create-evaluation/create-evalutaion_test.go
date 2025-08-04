@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"neuro.app.jordi/internal/evaluation/domain"
+	"neuro.app.jordi/internal/shared/mail"
 )
 
 func ptrFromInt(i int) *int {
@@ -45,6 +46,7 @@ var mockCommands = []CreateEvaluationCommand{{
 var llmService = domain.MockInterface{}
 var fileFormatterService = domain.MockFileFormatterService{}
 var evaluationsRepository = domain.MockEvaluationsRepository{}
+var mailService = mail.NewMailer()
 
 func TestCreateEvaluationCommandHandler(t *testing.T) {
 
@@ -59,7 +61,7 @@ func TestCreateEvaluationCommandHandler(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := CreateEvaluationCommandHandler(test.command, context.TODO(), llmService, fileFormatterService, evaluationsRepository)
+		err := CreateEvaluationCommandHandler(test.command, context.TODO(), llmService, fileFormatterService, evaluationsRepository, mailService)
 		if err != nil {
 			test.hasPassed = false
 		}

@@ -14,7 +14,7 @@ func (app *App) CreateEvaluation(c *gin.Context) {
 		return
 	}
 
-	err := createevaluation.CreateEvaluationCommandHandler(command, c, app.LLMService, app.FileFormater, app.EvaluationsRepository)
+	err := createevaluation.CreateEvaluationCommandHandler(command, c, app.LLMService, app.FileFormater, app.EvaluationsRepository, app.MailService)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error parsing input": err.Error()})
 		return

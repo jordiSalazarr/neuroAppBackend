@@ -19,7 +19,7 @@ func (app *App) SignUp(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error parsing input": err.Error()})
 		return
 	}
-	user, err := signup.SignUpCommandHandler(command, app.EncryptionService, app.UserRepository, app.MailService)
+	user, _, err := signup.SignUpCommandHandler(command, app.EncryptionService, app.UserRepository, app.MailService)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error parsing input": err.Error()})
 		return

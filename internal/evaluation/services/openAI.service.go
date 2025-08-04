@@ -3,12 +3,11 @@ package services
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
 	openai "github.com/sashabaranov/go-openai"
 	"neuro.app.jordi/internal/evaluation/domain"
+	"neuro.app.jordi/internal/shared/config"
 )
 
 type OpenAIService struct {
@@ -17,17 +16,10 @@ type OpenAIService struct {
 }
 
 func NewOpenAIService() OpenAIService {
-	cwd, _ := os.Getwd()
-	fmt.Println("Current working directory:", cwd)
-	err := godotenv.Load(".env.local")
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	apiKey := os.Getenv("OPENAI_API_KEY")
+	apiKey := config.GetConfig().OpenAIKey
 	if apiKey == "" {
-		panic("OPENAI_API_KEY is not set")
+		return OpenAIService{}
 	}
-
 	return OpenAIService{
 		client: openai.NewClient(apiKey),
 		ApiKey: apiKey,

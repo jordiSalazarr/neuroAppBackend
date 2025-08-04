@@ -42,7 +42,7 @@ func NewApp() *App {
 	return &App{
 		LLMService:        services.NewOpenAIService(),
 		FileFormater:      services.NewFileFormatter(),
-		MailService:       mail.NewSMTPMailProvider(),
+		MailService:       mail.NewMailer(),
 		EncryptionService: encryption.NewEncryptionService(),
 		Logger:            logger.NewLogger(),
 		JwtService:        jwtService.New(),
