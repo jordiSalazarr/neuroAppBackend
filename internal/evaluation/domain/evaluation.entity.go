@@ -53,7 +53,7 @@ func newPatientName(name string) (string, error) {
 	return name, nil
 }
 
-func NewEvaluation(totalScore int, patientNameInput string, specialistMailInput, specialitID string, atentionScore, motoreScore, spatialViewScore, memoryScore *int) (Evaluation, error) {
+func NewEvaluation(totalScore int, patientNameInput, specialistMailInput, specialistID string, sections []Section) (Evaluation, error) {
 	finalScore, err := newEvaluationTotalScore(totalScore)
 	if err != nil {
 		return Evaluation{}, err
@@ -63,16 +63,16 @@ func NewEvaluation(totalScore int, patientNameInput string, specialistMailInput,
 	if err != nil {
 		return Evaluation{}, err
 	}
-	id := uuid.NewString()
+
 	evaluation := Evaluation{
-		PK:                id,
+		PK:                uuid.NewString(),
 		TotalScore:        finalScore,
 		PatientName:       patientName,
 		SpecialistMail:    specialistMailInput,
-		SpecialistID:      specialitID,
+		SpecialistID:      specialistID,
 		CreatedAt:         time.Now(),
 		AssistantAnalysis: "",
-		Sections:          []Section{},
+		Sections:          sections,
 	}
 
 	return evaluation, nil

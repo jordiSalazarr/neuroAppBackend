@@ -10,15 +10,15 @@ import (
 func (app *App) CreateEvaluation(c *gin.Context) {
 	var command createevaluation.CreateEvaluationCommand
 	if err := c.ShouldBindJSON(&command); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error parsing input": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err := createevaluation.CreateEvaluationCommandHandler(command, c, app.LLMService, app.FileFormater, app.EvaluationsRepository, app.MailService)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error parsing input": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// Return a JSON response
-	c.JSON(http.StatusOK, gin.H{"successt": "check new file .pdf"})
+
+	c.JSON(http.StatusOK, gin.H{"success": "Evaluation created, PDF sent"})
 }
