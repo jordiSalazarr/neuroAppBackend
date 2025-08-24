@@ -35,24 +35,26 @@ func FinisEvaluationCommanndHandler(
 		return domain.Evaluation{}, err
 	}
 	evaluation.AssistantAnalysis = res
+	evaluation.CurrentStatus = domain.EvaluationCurrentStatusCompleted
 
-	html, err := fileFormatterService.GenerateHTML(evaluation)
-	if err != nil {
-		return domain.Evaluation{}, err
-	}
+	//TODO: is sending the pdf really necesary? I just would save the info, if they click send to mail. them we do it (in the historial component)
+	// html, err := fileFormatterService.GenerateHTML(evaluation)
+	// if err != nil {
+	// 	return domain.Evaluation{}, err
+	// }
 
-	pdf, err := fileFormatterService.ConvertHTMLtoPDF(html)
-	if err != nil {
-		return domain.Evaluation{}, err
-	}
-	//TODO generate HTML and then PDF and upload it
-	key, url, err := evaluationPublisher.PublishPDF(ctx, evaluation, pdf)
-	if err != nil {
-		return domain.Evaluation{}, nil
-	}
+	// pdf, err := fileFormatterService.ConvertHTMLtoPDF(html)
+	// if err != nil {
+	// 	return domain.Evaluation{}, err
+	// }
+	// //TODO generate HTML and then PDF and upload it
+	// key, url, err := evaluationPublisher.PublishPDF(ctx, evaluation, pdf)
+	// if err != nil {
+	// 	return domain.Evaluation{}, nil
+	// }
 
-	evaluation.StorageURL = url
-	evaluation.StorageKey = key
+	// evaluation.StorageURL = url
+	// evaluation.StorageKey = key
 	if err = evaluationRepository.Update(ctx, evaluation); err != nil {
 		return domain.Evaluation{}, nil
 	}
@@ -81,7 +83,7 @@ func populateEvaluationWithSubtests(ctx context.Context,
 		return err
 	}
 	evaluation.VerbalmemorySubTest = vm
-
+	//TODO: ML needing tests
 	// 2) Visual Memory
 	vim, err := visualMemoryRepository.GetByEvaluationID(ctx, evaluation.PK)
 	if err != nil {

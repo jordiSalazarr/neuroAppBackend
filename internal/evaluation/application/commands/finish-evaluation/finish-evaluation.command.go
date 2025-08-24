@@ -1,5 +1,5 @@
 package finishevaluation
 
 type FinisEvaluationCommannd struct {
-	EvaluationID string
+	EvaluationID string `json:"evaluation_id"`
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -31,87 +32,222 @@ func NewOpenAIService() OpenAIService {
 }
 
 // TODO: this will be the final prompt for the evaluation analysis
-func (oa OpenAIService) GenerateAnalysis(evaluation domain.Evaluation) (string, error) {
-	formattedEval := formatEvaluationAsText(evaluation)
+func (oa OpenAIService) GenerateAnalysis(ev domain.Evaluation) (string, error) {
+	// 1) Sanitiza y formatea SOLO lo necesario (sin datos personales)
+	safe := sanitizeEvaluation(ev)
+	formattedEval := formatEvaluationAsText(safe)
 
-	prompt := fmt.Sprintf(`Eres una IA médica especializada en evaluación neuropsicológica y trastornos del movimiento. 
-Un especialista está valorando a un paciente con enfermedad de Parkinson avanzada. La evaluación incluye pruebas cognitivas, motoras y cuestionarios clínicos.
+	prompt := fmt.Sprintf(
+		`Eres un/a neuropsicólogo/a clínico especializado/a en enfermedad de Parkinson avanzada.
+Vas a analizar una evaluación **anónima** compuesta por subtests estandarizados. 
+Trabaja únicamente con los datos proporcionados (no inventes, no infieras identidades ni demografía) y **omite cualquier referencia personal**.
 
-❗Importante:
-- Analiza únicamente los dominios y subtests con puntuación > 0.
-- Los valores son porcentajes sobre 100 (valores altos = mejor desempeño).
-- El análisis debe ser clínico, profesional y orientado a interpretación neurológica.
+REGLAS CRÍTICAS
+- Considera SOLO subtests con puntuación > 0 (si Score=0 o faltan datos, ignóralos en las conclusiones).
+- Cuando la métrica sea “Score” (0–100), valores más altos = mejor rendimiento.
+- En métricas de error o tasa (p. ej., intrusionsRate, perseverations, commissionRate, omissionsRate), valores más altos = peor rendimiento.
+- Si hay discrepancias entre métricas de un mismo subtest, explica la posible causa (velocidad vs precisión, fatiga, impulsividad, etc.).
+- Si un subtest está “pending”, “processing” o sin Score, indícalo como “sin datos” y NO lo uses para conclusiones.
 
-### Debes proporcionar:
+DOMINIOS Y MÉTRICAS (resumen operativo)
+1) Atención Sostenida — Letters Cancellation
+   - Score (0–100, mayor=mejor), Accuracy, Omissions, CommissionRate, Hits/Errors per min, CpPerMin.
+   - Déficit típico: ↑omissions/commissionRate y ↓accuracy/score → perfil atencional.
+2) Memoria Visual — BVMT (BVMT-R)
+   - Score.FinalScore (0–100), apoyo de IoU/SSIM/PSNR para calidad/parecido.
+   - Déficit típico: FinalScore bajo; si calidad gráfica (IoU/SSIM/PSNR) es muy baja, avisar posible sesgo de captura.
+3) Memoria Verbal — VerbalMemory
+   - Score (0–100), Hits, Omissions, Intrusions, Perseverations, Accuracy, IntrusionRate, PerseverationRate.
+   - Déficit típico amnésico: ↓score/accuracy con ↑omissions; intrusions/perseverations orientan a control ejecutivo/monitorización.
+4) Funciones Ejecutivas — ExecutiveFunctions (p. ej. TMT A/B)
+   - Score (0–100), Accuracy, SpeedIndex, CommissionRate, DurationSec.
+   - Déficit ejecutivo: ↓score/accuracy/speedIndex con ↑commissionRate/tiempos.
+5) Fluencia Verbal — LanguageFluency (p. ej., semántica)
+   - Score (0–100), UniqueValid, Intrusions, Perseverations, WordsPerMinute, IntrusionRate, PersevRate.
+   - Déficit léxico/ejecutivo: ↓uniqueValid/WPM, ↑intrusions/perseverations.
 
-1. **Perfil Neurológico Predominante:** Indica si el patrón se ajusta a uno de los siguientes perfiles (elige solo uno y explica por qué):
-   - **Amnésico**  
-   - **Fronto-temporal**  
-   - **Atencional**  
-   - **Depresivo**  
-   - **Disexecutivo (vascular)**  
+UMBRAL HEURÍSTICO (no diagnósticos, solo guía de interpretación)
+- 80–100: rendimiento preservado
+- 60–79: rendimiento dentro de lo esperado/leve fragilidad
+- 40–59: compromiso leve-moderado
+- 0–39: compromiso moderado-severo
+(Adapta la narrativa según la distribución de subtests: prioriza dominios con mayor evidencia y coherencia entre métricas.)
 
-2. **Interpretación Clínica Detallada:** Analiza los resultados de los subtests con puntuación > 0, explicando qué áreas están preservadas y cuáles muestran alteración.
+TAREA
+1) PERFIL NEUROLÓGICO PREDOMINANTE (elige SOLO UNO, breve justificación):
+   - Amnésico
+   - Fronto‑temporal
+   - Atencional
+   - Depresivo
+   - Disexecutivo (vascular)
+   *Si la evidencia no es concluyente, elige el más compatible y explicita la incertidumbre.*
 
-3. **Resumen General:** Estado cognitivo, motor y funcional del paciente.
+2) INTERPRETACIÓN CLÍNICA DETALLADA
+   - Para cada subtest con puntuación > 0: nombre → breve interpretación (qué sugiere el patrón de métricas).
+   - Explica áreas preservadas vs alteradas y posibles mecanismos (atencional, ejecutiva, codificación/recuperación, velocidad de procesamiento, impulsividad, etc.).
+   - Si la calidad de BVMT (IoU/SSIM/PSNR) es muy baja y el FinalScore es bajo, añade advertencia de posible artefacto técnico.
 
-4. **Recomendaciones:** Si procede, sugiere seguimiento, ajustes terapéuticos o pruebas complementarias.
+3) RESUMEN GENERAL
+   - Estado cognitivo global (resumen integrador en 2–3 frases).
+   - Coherencia inter‑dominios (p. ej., si empeora atención también cae ejecución/fluencia, etc.).
 
-Informe de Evaluación:
+4) RECOMENDACIONES (si procede)
+   - Sugerencias de seguimiento clínico y pruebas complementarias (ej.: repetir subtest con mala calidad, ampliar evaluación ejecutiva, cribado depresivo, neuroimagen si sospecha vascular, etc.).
+   - Orientación terapéutica general (no prescribir): rehabilitación cognitiva enfocada, higiene del sueño, revisar medicación dopaminérgica si hay enlentecimiento/impulsividad, etc.
+
+ENTRADA (JSON ANÓNIMO):
 %s
 
-Responde **en español**, con un tono clínico, neutro y profesional. 
-No menciones que eres una IA ni hagas comentarios sobre el formato.`, formattedEval)
+FORMATO DE SALIDA (en español, tono clínico y profesional)
+### Perfil predominante
+[tu elección + justificación breve]
 
-	resp, err := oa.client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
-		Model: openai.GPT4, // puedes usar gpt-4o si tu SDK lo soporta
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: "Eres un experto en neuropsicología y evaluaciones clínicas en enfermedad de Parkinson. Tu tarea es generar informes diagnósticos precisos.",
-			},
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: prompt,
-			},
-		},
-		Temperature: 0.2, // baja temperatura para respuestas más consistentes
-	})
+### Interpretación por subtest
+- Letters Cancellation: [...]
+- BVMT-R (Memoria visual): [...]
+- Memoria verbal: [...]
+- Funciones ejecutivas: [...]
+- Fluencia verbal: [...]
 
+### Resumen general
+[...]
+
+### Recomendaciones
+- [...]
+- [...]
+
+No menciones que eres una IA ni el formato. No incluyas datos personales.`, formattedEval)
+
+	resp, err := oa.Ask(prompt)
 	if err != nil {
-		return "", fmt.Errorf("OpenAI request failed: %w", err)
+		return "", err
 	}
-
-	if len(resp.Choices) == 0 {
-		return "", fmt.Errorf("no response from OpenAI")
-	}
-
-	return strings.TrimSpace(resp.Choices[0].Message.Content), nil
+	return resp, nil
 }
 
-func formatEvaluationAsText(eval domain.Evaluation) string {
-	// var b strings.Builder
+func sanitizeEvaluation(ev domain.Evaluation) domain.Evaluation {
+	ev.PatientName = ""
+	ev.SpecialistMail = ""
+	ev.SpecialistID = ""
+	// Si tu tipo tiene otros campos identificables, límpialos aquí también.
+	return ev
+}
+func formatEvaluationAsText(ev domain.Evaluation) string {
+	// Construye una vista compacta y anónima. Mantén métricas y estados.
+	type out struct {
+		CurrentStatus string `json:"currentStatus"`
 
-	// b.WriteString(fmt.Sprintf("Fecha de Evaluación: %s\n", eval.CreatedAt.Format("2006-01-02 15:04")))
-	// b.WriteString(fmt.Sprintf("Paciente: %s\n", eval.PatientName))
-	// b.WriteString(fmt.Sprintf("Puntuación Total: %d/100\n", eval.TotalScore))
-	// b.WriteString("———\n\n")
+		LettersCancellation struct {
+			Score          int     `json:"score"`
+			Accuracy       float64 `json:"accuracy"`
+			Omissions      int     `json:"omissions"`
+			OmissionsRate  float64 `json:"omissionsRate"`
+			CommissionRate float64 `json:"commissionRate"`
+			HitsPerMin     float64 `json:"hitsPerMin"`
+			ErrorsPerMin   float64 `json:"errorsPerMin"`
+			CpPerMin       float64 `json:"cpPerMin"`
+			TimeSec        int     `json:"timeSec"`
+			Status         string  `json:"status"`
+		} `json:"lettersCancellation"`
 
-	// for _, section := range eval.Sections {
-	// 	if section.Score > 0 {
-	// 		b.WriteString(fmt.Sprintf("▶️ Dominio: %s (Puntuación: %d/100)\n", section.Name, section.Score))
-	// 		for _, q := range section.Questions {
-	// 			b.WriteString(fmt.Sprintf(" - Pregunta: %s\n", q.Answer))
-	// 			b.WriteString(fmt.Sprintf("   ➤ Respuesta: %s\n", q.Response))
-	// 			if q.Correct != "" {
-	// 				b.WriteString(fmt.Sprintf("   ✔️ Correcta: %s\n", q.Correct))
-	// 			}
-	// 			b.WriteString(fmt.Sprintf("   🟢 Puntos: %d\n", q.Score))
-	// 		}
-	// 		b.WriteString("\n")
-	// 	}
-	// }
-	return "b.String()"
+		BVMT struct {
+			Status     string   `json:"status"`
+			FinalScore *int     `json:"finalScore,omitempty"`
+			IoU        *float64 `json:"iou,omitempty"`
+			SSIM       *float64 `json:"ssim,omitempty"`
+			PSNR       *float64 `json:"psnr,omitempty"`
+		} `json:"bvmt"`
+
+		VerbalMemory struct {
+			Score             int     `json:"score"`
+			Hits              int     `json:"hits"`
+			Omissions         int     `json:"omissions"`
+			Intrusions        int     `json:"intrusions"`
+			Perseverations    int     `json:"perseverations"`
+			Accuracy          float64 `json:"accuracy"`
+			IntrusionRate     float64 `json:"intrusionRate"`
+			PerseverationRate float64 `json:"perseverationRate"`
+			Type              string  `json:"type"`
+		} `json:"verbalMemory"`
+
+		Executive struct {
+			Score          int     `json:"score"`
+			Accuracy       float64 `json:"accuracy"`
+			SpeedIndex     float64 `json:"speedIndex"`
+			CommissionRate float64 `json:"commissionRate"`
+			DurationSec    float64 `json:"durationSec"`
+			Type           string  `json:"type"`
+		} `json:"executive"`
+
+		Fluency struct {
+			Score          int     `json:"score"`
+			UniqueValid    int     `json:"uniqueValid"`
+			Intrusions     int     `json:"intrusions"`
+			Perseverations int     `json:"perseverations"`
+			TotalProduced  int     `json:"totalProduced"`
+			WordsPerMin    float64 `json:"wordsPerMinute"`
+			IntrusionRate  float64 `json:"intrusionRate"`
+			PersevRate     float64 `json:"persevRate"`
+			Category       string  `json:"category"`
+		} `json:"fluency"`
+	}
+
+	var o out
+	o.CurrentStatus = string(ev.CurrentStatus)
+
+	// Letters Cancellation
+	o.LettersCancellation.Score = ev.LetterCancellationSubTest.CancellationScore.Score
+	o.LettersCancellation.Accuracy = ev.LetterCancellationSubTest.CancellationScore.Accuracy
+	o.LettersCancellation.Omissions = ev.LetterCancellationSubTest.CancellationScore.Omissions
+	o.LettersCancellation.OmissionsRate = ev.LetterCancellationSubTest.CancellationScore.OmissionsRate
+	o.LettersCancellation.CommissionRate = ev.LetterCancellationSubTest.CancellationScore.CommissionRate
+	o.LettersCancellation.HitsPerMin = ev.LetterCancellationSubTest.CancellationScore.HitsPerMin
+	o.LettersCancellation.ErrorsPerMin = ev.LetterCancellationSubTest.CancellationScore.ErrorsPerMin
+	o.LettersCancellation.CpPerMin = ev.LetterCancellationSubTest.CancellationScore.CpPerMin
+	o.LettersCancellation.TimeSec = ev.LetterCancellationSubTest.TimeInSecs
+	o.LettersCancellation.Status = "available"
+
+	// BVMT (maneja puntero de Score)
+	o.BVMT.Status = string(ev.VisualMemorySubTest.Status)
+	if ev.VisualMemorySubTest.Score != nil {
+		o.BVMT.FinalScore = &ev.VisualMemorySubTest.Score.FinalScore
+		o.BVMT.IoU = &ev.VisualMemorySubTest.Score.IoU
+		o.BVMT.SSIM = &ev.VisualMemorySubTest.Score.SSIM
+		o.BVMT.PSNR = &ev.VisualMemorySubTest.Score.PSNR
+	}
+
+	// Verbal Memory
+	o.VerbalMemory.Score = ev.VerbalmemorySubTest.Score.Score
+	o.VerbalMemory.Hits = ev.VerbalmemorySubTest.Score.Hits
+	o.VerbalMemory.Omissions = ev.VerbalmemorySubTest.Score.Omissions
+	o.VerbalMemory.Intrusions = ev.VerbalmemorySubTest.Score.Intrusions
+	o.VerbalMemory.Perseverations = ev.VerbalmemorySubTest.Score.Perseverations
+	o.VerbalMemory.Accuracy = ev.VerbalmemorySubTest.Score.Accuracy
+	o.VerbalMemory.IntrusionRate = ev.VerbalmemorySubTest.Score.IntrusionRate
+	o.VerbalMemory.PerseverationRate = ev.VerbalmemorySubTest.Score.PerseverationRate
+	o.VerbalMemory.Type = string(ev.VerbalmemorySubTest.Type)
+
+	// Executive
+	o.Executive.Score = ev.ExecutiveFunctionSubTest.Score.Score
+	o.Executive.Accuracy = ev.ExecutiveFunctionSubTest.Score.Accuracy
+	o.Executive.SpeedIndex = ev.ExecutiveFunctionSubTest.Score.SpeedIndex
+	o.Executive.CommissionRate = ev.ExecutiveFunctionSubTest.Score.CommissionRate
+	o.Executive.DurationSec = ev.ExecutiveFunctionSubTest.Score.DurationSec
+	o.Executive.Type = string(ev.ExecutiveFunctionSubTest.Type)
+
+	// Fluency
+	o.Fluency.Score = ev.LanguageFluencySubTest.Score.Score
+	o.Fluency.UniqueValid = ev.LanguageFluencySubTest.Score.UniqueValid
+	o.Fluency.Intrusions = ev.LanguageFluencySubTest.Score.Intrusions
+	o.Fluency.Perseverations = ev.LanguageFluencySubTest.Score.Perseverations
+	o.Fluency.TotalProduced = ev.LanguageFluencySubTest.Score.TotalProduced
+	o.Fluency.WordsPerMin = ev.LanguageFluencySubTest.Score.WordsPerMinute
+	o.Fluency.IntrusionRate = ev.LanguageFluencySubTest.Score.IntrusionRate
+	o.Fluency.PersevRate = ev.LanguageFluencySubTest.Score.PersevRate
+	o.Fluency.Category = ev.LanguageFluencySubTest.Category
+
+	b, _ := json.Marshal(o)
+	return string(b)
 }
 
 func (oa OpenAIService) LettersCancellationAnalysis(subtest *LCdomain.LettersCancellationSubtest, patientAge int) (string, error) {

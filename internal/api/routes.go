@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
 	auth "neuro.app.jordi/internal/auth/domain"
@@ -104,6 +106,14 @@ func NewApp(db *sql.DB) *App {
 
 func (app *App) SetupRouter() *gin.Engine {
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
+		AllowCredentials: false, // true solo si usas cookies
+		MaxAge:           12 * time.Hour,
+	}))
 	router.Use(rateLimiter, gin.Recovery())
 
 	//TODO: routes missing: finish-evaluation, getEvaluation, getUser
@@ -111,7 +121,7 @@ func (app *App) SetupRouter() *gin.Engine {
 	// Grupo para endpoints relacionados con evaluaciones
 	evaluationGroup := router.Group("/v1/evaluations")
 	{
-		evaluationGroup.POST("/", app.CreateEvaluation)
+		evaluationGroup.POST("", app.CreateEvaluation)
 		evaluationGroup.POST("/letter-cancellation", app.CreateLetterCancellationSubtest)
 		evaluationGroup.POST("/verbal-memory", app.VerbalMemorySubtest)
 		evaluationGroup.POST("/executive-functions", app.ExecutiveFunctionsSubtest)

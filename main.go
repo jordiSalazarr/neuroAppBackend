@@ -48,13 +48,13 @@ func main() {
 
 	// HTTP server
 	srv := &http.Server{
-		Addr:    ":8400",
+		Addr:    ":8401",
 		Handler: router,
 	}
 
 	// Run server in goroutine
 	go func() {
-		log.Printf("Server listening on port 8400")
+		log.Printf("Server listening on port 8401")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Listen error: %s\n", err)
 		}

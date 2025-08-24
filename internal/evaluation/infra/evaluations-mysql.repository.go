@@ -61,6 +61,7 @@ func (m *EvaluationsMYSQLRepository) Update(ctx context.Context, evaluation doma
 	}
 	//TODO: here we should add the fields we want to update
 	dbEvaluation.CurrentStatus = string(evaluation.CurrentStatus)
+	dbEvaluation.AssistantAnalysis = null.StringFrom(evaluation.AssistantAnalysis)
 	_, err = dbEvaluation.Update(ctx, m.Exec, boil.Infer())
 	return err
 }

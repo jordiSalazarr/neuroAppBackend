@@ -2,7 +2,7 @@ package VEMdomain
 
 import (
 	"context"
-	"errors"
+	"time"
 )
 
 type VerbalMemoryRepository interface {
@@ -14,6 +14,27 @@ type VerbalMemoryRepository interface {
 
 type InMemoryVerbalMemoryRepository struct {
 	data map[string]VerbalMemorySubtest
+}
+
+var mock = VerbalMemorySubtest{
+	Pk:               "mock-pk-123",
+	SecondsFromStart: 0,
+	GivenWords:       []string{"casa", "perro", "sol"},
+	RecalledWords:    []string{"casa", "sol"},
+	Type:             "verbal-memory",
+	EvaluationID:     "eval-456",
+	Score: VerbalMemoryScore{
+		Score:             2,
+		Hits:              2,
+		Omissions:         1,
+		Intrusions:        0,
+		Perseverations:    0,
+		Accuracy:          0.66,
+		IntrusionRate:     0.0,
+		PerseverationRate: 0.0,
+	},
+	AssistanAnalysis: "Paciente recordó 2 de 3 palabras con un 66% de precisión",
+	CreatedAt:        time.Now(),
 }
 
 func NewInMemoryVerbalMemoryRepository() *InMemoryVerbalMemoryRepository {
@@ -28,11 +49,11 @@ func (r InMemoryVerbalMemoryRepository) Save(ctx context.Context, subtest Verbal
 }
 
 func (r InMemoryVerbalMemoryRepository) GetByID(ctx context.Context, id string) (VerbalMemorySubtest, error) {
-	subtest, exists := r.data[id]
-	if !exists {
-		return VerbalMemorySubtest{}, errors.New("verbal memory subtest not found")
-	}
-	return subtest, nil
+	// _, exists := r.data[id]
+	// if !exists {
+	// 	return VerbalMemorySubtest{}, errors.New("verbal memory subtest not found")
+	// }
+	return mock, nil
 }
 
 func (r InMemoryVerbalMemoryRepository) GetByEvaluationID(ctx context.Context, id string) (VerbalMemorySubtest, error) {
@@ -41,5 +62,5 @@ func (r InMemoryVerbalMemoryRepository) GetByEvaluationID(ctx context.Context, i
 			return test, nil
 		}
 	}
-	return VerbalMemorySubtest{}, nil
+	return mock, nil
 }

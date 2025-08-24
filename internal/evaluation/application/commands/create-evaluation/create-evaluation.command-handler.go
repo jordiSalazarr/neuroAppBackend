@@ -14,5 +14,5 @@ func CreateEvaluationCommandHandler(command CreateEvaluationCommand, ctx context
 	}
 
 	err = evaluationsRepository.Save(ctx, evaluation)
-	return domain.Evaluation{}, err
+	return evaluation, err
 }
