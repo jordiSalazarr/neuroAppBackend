@@ -75,13 +75,3 @@ func (repo *UserInMemory) Update(user domain.User) error {
 	repo.Users[user.ID] = &user
 	return nil
 }
-
-func (repo *UserInMemory) UsersPendingAcceptRequest() ([]*domain.User, error) {
-	var pendingUsers []*domain.User
-	for _, user := range repo.Users {
-		if user.IsVerified && !user.IsAcceptedByAdmin {
-			pendingUsers = append(pendingUsers, user)
-		}
-	}
-	return pendingUsers, nil
-}

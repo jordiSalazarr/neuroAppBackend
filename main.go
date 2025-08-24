@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"neuro.app.jordi/internal/api"
+	"neuro.app.jordi/internal/shared/mysql"
 )
 
 type Config struct {
@@ -19,10 +20,14 @@ type Config struct {
 }
 
 func main() {
+	db, err := mysql.NewMySQL()
+	if err != nil {
+		log.Fatal(err)
+	}
 	// Load config
 
 	// Create router
-	router := api.NewApp().SetupRouter()
+	router := api.NewApp(db).SetupRouter()
 
 	// Middleware
 	router.Use(gin.Logger())

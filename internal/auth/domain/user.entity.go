@@ -2,8 +2,6 @@ package domain
 
 import (
 	"errors"
-	"fmt"
-	"math/rand"
 	"regexp"
 	"time"
 
@@ -12,19 +10,6 @@ import (
 
 var emailRegex = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 var ErrInvalidMail = errors.New("invalid mail, please try again")
-
-type Password struct {
-	Plain  string
-	Hashed string
-}
-
-func (p *Password) Hash(es EncryptionService) {
-	p.Hashed = es.Hash(p.Plain)
-}
-
-func (p Password) Compare(es EncryptionService) bool {
-	return es.Compare(p.Plain, p.Hashed)
-}
 
 type UserMail struct {
 	Mail string
@@ -54,34 +39,19 @@ func NewMail(mail string) (UserMail, error) {
 	}, nil
 }
 
-func (u *User) GenerateVerificationCode() {
-	u.VerificationCode = fmt.Sprintf("%08d", rand.Intn(100000000))
-	u.VerificationCodeExpiresAt = time.Now().Add(10 * time.Minute)
-}
-
 type User struct {
 	ID                            string
 	Email                         UserMail
-	Password                      Password
 	Name                          UserName
-	IsVerified                    bool
-	IsAdmin                       bool
 	IsActive                      bool
-	IsAcceptedByAdmin             bool
 	HasAcceptedTermsAndConditions bool
-	VerificationCode              string
-	VerificationCodeExpiresAt     time.Time
-	PasswordResetCode             string
-	PasswordResetCodeExpiresAt    time.Time
+	Phone                         string
 	CreatedAt                     time.Time
 	UpdatedAt                     time.Time
 }
 
-func NewUser(mail, plainPassword, name string, es EncryptionService) (*User, error) {
-	password := Password{
-		Plain: plainPassword,
-	}
-	password.Hash(es)
+func NewUser(name, mail string) (*User, error) {
+
 	id := uuid.NewString()
 	userMail, err := NewMail(mail)
 	if err != nil {
@@ -96,16 +66,8 @@ func NewUser(mail, plainPassword, name string, es EncryptionService) (*User, err
 		ID:                            id,
 		Email:                         userMail,
 		Name:                          userName,
-		Password:                      password,
-		IsVerified:                    false,
-		IsAdmin:                       false,
 		IsActive:                      true,
-		VerificationCode:              "",
-		IsAcceptedByAdmin:             false,
-		HasAcceptedTermsAndConditions: true,
-		VerificationCodeExpiresAt:     time.Time{},
-		PasswordResetCode:             "",
-		PasswordResetCodeExpiresAt:    time.Time{},
+		HasAcceptedTermsAndConditions: false,
 		CreatedAt:                     time.Now(),
 		UpdatedAt:                     time.Now(),
 	}, nil

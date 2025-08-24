@@ -5,6 +5,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	EFdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/executive-functions"
+	LFdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/language-fluency"
+	LCdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/letter-cancellation"
+	VEMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/verbal-memory"
+	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
 )
 
 const MaxUserName = 50
@@ -13,37 +18,32 @@ const SpecialistMailHeaderKey = "specialist-mail"
 
 var ErrInvalidName = errors.New("invalid name")
 
+type EvaluationCurrentStatus string
+
+const (
+	EvaluationCurrentStatusCreated    EvaluationCurrentStatus = "CREATED"
+	EvaluationCurrentStatusInProgress EvaluationCurrentStatus = "IN_PROGRESS"
+	EvaluationCurrentStatusCompleted  EvaluationCurrentStatus = "COMPLETED"
+	EvaluationCurrentStatusCancelled  EvaluationCurrentStatus = "CANCELLED"
+	EvaluationCurrentStatusFailed     EvaluationCurrentStatus = "FAILED"
+)
+
 type Evaluation struct {
-	PK                string    `json:"pk"`
-	PatientName       string    `json:"patientName"`
-	SpecialistMail    string    `json:"specialistMail"`
-	SpecialistID      string    `json:"specialistId"`
-	AssistantAnalysis string    `json:"assistantAnalysis"`
-	CreatedAt         time.Time `json:"createdAt"`
-
-	TotalScore int       `json:"totalScore"`
-	Sections   []Section `json:"sections"` // ✅ New nested structure
-}
-
-type Section struct {
-	Name      string     `json:"name"`      // e.g. "Memory"
-	Score     int        `json:"score"`     // sum of questions
-	Questions []Question `json:"questions"` // ✅ Each question
-}
-
-type Question struct {
-	ID       string `json:"id"`       // unique per question
-	Answer   string `json:"text"`     // question asked
-	Response string `json:"response"` // patient's answer
-	Correct  string `json:"correct"`  // expected answer (optional)
-	Score    int    `json:"score"`    // score for this question
-}
-
-func newEvaluationTotalScore(score int) (int, error) {
-	if score <= 0 || score >= 100000 {
-		return 0, errors.New("invalid evaluation score")
-	}
-	return score, nil
+	PK                        string                  `json:"pk"`
+	PatientName               string                  `json:"patientName"`
+	PatientAge                int                     `json:"patientAge"`
+	SpecialistMail            string                  `json:"specialistMail"`
+	SpecialistID              string                  `json:"specialistId"`
+	AssistantAnalysis         string                  `json:"assistantAnalysis"`
+	StorageURL                string                  `json:"storage_url"`
+	StorageKey                string                  `json:"storage_key"`
+	CreatedAt                 time.Time               `json:"createdAt"`
+	CurrentStatus             EvaluationCurrentStatus `json:"currentStatus"`
+	LetterCancellationSubTest LCdomain.LettersCancellationSubtest
+	VisualMemorySubTest       VIMdomain.BVMTSubtest
+	VerbalmemorySubTest       VEMdomain.VerbalMemorySubtest
+	ExecutiveFunctionSubTest  EFdomain.ExecutiveFunctionsSubtest
+	LanguageFluencySubTest    LFdomain.LanguageFluency
 }
 
 func newPatientName(name string) (string, error) {
@@ -53,26 +53,36 @@ func newPatientName(name string) (string, error) {
 	return name, nil
 }
 
-func NewEvaluation(totalScore int, patientNameInput, specialistMailInput, specialistID string, sections []Section) (Evaluation, error) {
-	finalScore, err := newEvaluationTotalScore(totalScore)
-	if err != nil {
-		return Evaluation{}, err
+func newPatientAge(age int) (int, error) {
+	if age <= 15 || age >= 150 {
+		return 0, errors.New("invalid age")
 	}
+	return age, nil
+}
+
+func NewEvaluation(patientNameInput, specialistMailInput, specialistID string, patientAgeInput int) (Evaluation, error) {
 
 	patientName, err := newPatientName(patientNameInput)
 	if err != nil {
 		return Evaluation{}, err
 	}
 
+	patientAge, err := newPatientAge(patientAgeInput)
+	if err != nil {
+		return Evaluation{}, err
+	}
+
+	//TODO: this type should compose all subtests
 	evaluation := Evaluation{
 		PK:                uuid.NewString(),
-		TotalScore:        finalScore,
 		PatientName:       patientName,
 		SpecialistMail:    specialistMailInput,
 		SpecialistID:      specialistID,
+		PatientAge:        patientAge,
 		CreatedAt:         time.Now(),
 		AssistantAnalysis: "",
-		Sections:          sections,
+		StorageURL:        "",
+		CurrentStatus:     EvaluationCurrentStatusCreated,
 	}
 
 	return evaluation, nil
