@@ -317,7 +317,7 @@ func (oa OpenAIService) Ask(prompt string) (string, error) {
 				Content: prompt,
 			},
 		},
-		Temperature: 0.2, // baja temperatura para respuestas más consistentes
+		Temperature: 0,
 	})
 
 	if err != nil {

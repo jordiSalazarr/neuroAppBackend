@@ -15,15 +15,15 @@ func CreateLetterCancellationSubtestCommandHandler(ctx context.Context, command 
 	if err != nil {
 		return nil, err
 	}
-	parentEval, err := evaluationsRepo.GetByID(ctx, command.EvaluationID)
-	if err != nil {
-		return nil, err
-	}
-	analysis, err := llmService.LettersCancellationAnalysis(subtest, parentEval.PatientAge)
-	if err != nil {
-		return nil, err
-	}
-	subtest.AssistantAnalysis = analysis
+	// parentEval, err := evaluationsRepo.GetByID(ctx, command.EvaluationID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// analysis, err := llmService.LettersCancellationAnalysis(subtest, parentEval.PatientAge)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// subtest.AssistantAnalysis = analysis
 	err = letterCancellationRepo.Save(ctx, subtest)
 	if err != nil {
 		return nil, err

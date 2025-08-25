@@ -20,6 +20,7 @@ import (
 	EFinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/executive-functions"
 	LFinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/language-fluency"
 	LCinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/letter-cancellation"
+	VEMinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/verbal-memory"
 	VIMinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/visual-memory"
 
 	"neuro.app.jordi/internal/evaluation/domain"
@@ -73,11 +74,12 @@ func getAppRepositories(db *sql.DB) Repositories {
 	return Repositories{
 		EvaluationsRepository:               infra.NewEvaluationsMYSQLRepository(db),
 		LetterCancellationRepository:        LCinfra.NewInMemoryLetterCancellationRepository(db),
-		VerbalMemorySubtestRepository:       VEMdomain.NewInMemoryVerbalMemoryRepository(), //TODO: implement this with a real repository (sql)
+		VerbalMemorySubtestRepository:       VEMinfra.NewVerbalMemoryMYSQLRepository(db),
 		ExecutiveFunctionsSubtestRepository: EFinfra.NewExecutiveFunctionsSubtestMYSQLRepository(db),
 		LanguageFluencyRepository:           LFinfra.NewLanguageFluencyMYSQLRepository(db),
 		VisualMemorySubtestRepository:       VIMinfra.NewInMemoryBVMTRepo(), //TODO: implement this with a real repository (sql)
-		UserRepository:                      usersInfra.NewUseMYSQLRepository(db),
+		//VISUALSPATIALMEMORY (this and visual memory above, require ML)/TODO: implement this with a real repository (sql)
+		UserRepository: usersInfra.NewUseMYSQLRepository(db),
 	}
 }
 func getAppServices() Services {
@@ -128,6 +130,7 @@ func (app *App) SetupRouter() *gin.Engine {
 		evaluationGroup.POST("/language-fluency", app.LanguageFluencySubtest)
 		evaluationGroup.POST("/visual-memory", app.VisualMemorySubtest) // Manejador para subir imágenes
 		evaluationGroup.POST("/finish-evaluation", app.FinnishEvaluation)
+		evaluationGroup.GET("/:id", app.GetEvaluation)
 	}
 
 	// Grupo para otros endpoints (ejemplo)

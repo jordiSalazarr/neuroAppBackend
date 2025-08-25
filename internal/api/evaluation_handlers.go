@@ -13,11 +13,54 @@ import (
 	createverbalmemorysubtest "neuro.app.jordi/internal/evaluation/application/commands/create-verbalMemory-subtest"
 	createvisualmemorysubtest "neuro.app.jordi/internal/evaluation/application/commands/create-visualMemory-subtest"
 	finishevaluation "neuro.app.jordi/internal/evaluation/application/commands/finish-evaluation"
+	getevaluation "neuro.app.jordi/internal/evaluation/application/queries/get-evaluation"
 	"neuro.app.jordi/internal/evaluation/domain"
 	reports "neuro.app.jordi/internal/evaluation/domain/services"
 	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
 	"neuro.app.jordi/internal/evaluation/utils"
 )
+
+type EvaluationAPI struct {
+	PK                string    `json:"pk"`
+	PatientName       string    `json:"patientName"`
+	PatientAge        int       `json:"patientAge"`
+	SpecialistMail    string    `json:"specialistMail"`
+	SpecialistID      string    `json:"specialistId"`
+	AssistantAnalysis string    `json:"assistantAnalysis"`
+	StorageURL        string    `json:"storage_url"`
+	CreatedAt         time.Time `json:"createdAt"`
+	CurrentStatus     string    `json:"currentStatus"`
+}
+
+func domainToAPIEvaluation(eval domain.Evaluation) EvaluationAPI {
+	return EvaluationAPI{
+		PK:                eval.PK,
+		PatientName:       eval.PatientName,
+		PatientAge:        eval.PatientAge,
+		SpecialistMail:    eval.SpecialistMail,
+		SpecialistID:      eval.SpecialistID,
+		AssistantAnalysis: eval.AssistantAnalysis,
+		StorageURL:        eval.StorageURL,
+		CreatedAt:         eval.CreatedAt,
+		CurrentStatus:     string(eval.CurrentStatus),
+	}
+}
+
+func (app *App) GetEvaluation(c *gin.Context) {
+	var query getevaluation.GetEvaluationQuery
+	id := c.Params.ByName("id")
+	query.EvaluationID = id
+	evaluation, err := getevaluation.GetEvaluationQueryHandler(c.Request.Context(), query, app.Repositories.EvaluationsRepository)
+	if err != nil {
+		app.Logger.Error(c.Request.Context(), "error getting evaluation", err, nil)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success":    "Evaluation created",
+		"evaluation": domainToAPIEvaluation(evaluation),
+	})
+}
 
 func (app *App) CreateEvaluation(c *gin.Context) {
 	var command createevaluation.CreateEvaluationCommand

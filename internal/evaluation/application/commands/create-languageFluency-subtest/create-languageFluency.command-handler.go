@@ -23,11 +23,11 @@ func CreateLanguageFluencySubtestCommandHandler(ctx context.Context, cmd CreateL
 	}
 	languageFluency.Score = score
 
-	res, err := llmService.LanguageFluencyAnalysis(languageFluency, evaluation.PatientAge)
-	if err != nil {
-		return LFdomain.LanguageFluency{}, err
-	}
-	languageFluency.AssistantAnalysis = res
+	// res, err := llmService.LanguageFluencyAnalysis(languageFluency, evaluation.PatientAge)
+	// if err != nil {
+	// 	return LFdomain.LanguageFluency{}, err
+	// }
+	// languageFluency.AssistantAnalysis = res
 
 	err = languageFluencyRepo.Save(ctx, *languageFluency)
 	if err != nil {

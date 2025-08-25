@@ -9,10 +9,12 @@ var TableNames = struct {
 	LanguageFluencies           string
 	LettersCancellationSubtests string
 	Users                       string
+	VerbalMemorySubtests        string
 }{
 	Evaluations:                 "evaluations",
 	ExecutiveFunctionsSubtests:  "executive_functions_subtests",
 	LanguageFluencies:           "language_fluencies",
 	LettersCancellationSubtests: "letters_cancellation_subtests",
 	Users:                       "users",
+	VerbalMemorySubtests:        "verbal_memory_subtests",
 }
