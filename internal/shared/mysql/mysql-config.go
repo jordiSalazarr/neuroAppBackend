@@ -14,14 +14,18 @@ import (
 
 func NewMySQL() (*sql.DB, error) {
 	_ = godotenv.Overload(".env.local", ".env") // prioridad a .env.local; luego .env
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
+	var dsn string
+	if os.Getenv("environment") != "local" {
+		dsn = os.Getenv("DB_URL")
+	} else {
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+			os.Getenv("DB_USER"),
+			os.Getenv("DB_PASSWORD"),
+			os.Getenv("DB_HOST"),
+			os.Getenv("DB_PORT"),
+			os.Getenv("DB_NAME"),
+		)
+	}
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
