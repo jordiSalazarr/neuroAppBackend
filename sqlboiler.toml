@@ -1,0 +1,14 @@
+output = "database/dbmodels"
+pkgname = "dbmodels"
+wipe = true
+no-tests = true
+
+[mysql]
+pkgname = "dbmodels"
+dbname = "neuro"
+host = "localhost"
+port = 3306
+user = "root"
+pass = "root"
+sslmode = "false"
+blacklist = ["migrations"]

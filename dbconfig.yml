@@ -1,0 +1,17 @@
+development:
+  dialect: mysql
+  datasource: root:root@/neuro?parseTime=true
+  dir: migrations
+  table: migrations
+
+master:
+  dialect: mysql
+  datasource: core_prod:ThXoWkVOAp0IlvQM07ZbGmGdJjIM@unix(/cloudsql/cityxerpa-b57e7:europe-west1:ew1)/core_prod?parseTime=true
+  dir: migrations
+  table: migrations
+
+develop:
+  dialect: mysql
+  datasource: core_dev:WwYjehwsrWpHUo6hdzMkDpSLuW7R@unix(/cloudsql/cityxerpa-b57e7:europe-west1:dev-ew1)/core_dev?parseTime=true
+  dir: migrations
+  table: migrations

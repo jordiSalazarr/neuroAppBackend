@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"neuro.app.jordi/internal/api"
+	"neuro.app.jordi/internal/shared/mysql"
 )
 
 type Config struct {
@@ -19,21 +20,20 @@ type Config struct {
 }
 
 func main() {
-	// Load config
+	db, err := mysql.NewMySQL()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Create router
-	router := api.NewApp().SetupRouter()
+	router := api.NewApp(db).SetupRouter()
 
-	// Middleware
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	// Health check
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// API routes
 	api := router.Group("/api")
 	{
 		api.GET("/ping", func(c *gin.Context) {
@@ -41,21 +41,18 @@ func main() {
 		})
 	}
 
-	// HTTP server
 	srv := &http.Server{
-		Addr:    ":8400",
+		Addr:    ":8401",
 		Handler: router,
 	}
 
-	// Run server in goroutine
 	go func() {
-		log.Printf("Server listening on port 8400")
+		log.Printf("Server listening on port 8401")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Listen error: %s\n", err)
 		}
 	}()
 
-	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

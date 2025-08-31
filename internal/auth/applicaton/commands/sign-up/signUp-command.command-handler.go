@@ -1,8 +1,10 @@
 package signup
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"neuro.app.jordi/internal/auth/domain"
 	"neuro.app.jordi/internal/shared/mail"
@@ -10,51 +12,54 @@ import (
 
 var ErrInvalidCredentials = errors.New("error creating user")
 
-func SignUpCommandHandler(command SignUpCommand, es domain.EncryptionService, userRepo domain.UserRepository, mailService mail.MailProvider) (*domain.User, error) {
-	user, err := domain.NewUser(command.Mail, command.Password, command.Name, es)
+func SignUpCommandHandler(ctx context.Context, command SignUpCommand, userRepo domain.UserRepository, mailService mail.MailProvider) (domain.User, string, error) {
+	user, err := domain.NewUser(command.Name, command.Mail)
 	if err != nil {
-		return nil, err
+		return domain.User{}, "", err
 	}
-	if exists := userRepo.Exists(user.Email.Mail); exists {
-		return nil, ErrInvalidCredentials
+	if exists := userRepo.Exists(ctx, user.Email.Mail); exists {
+		return domain.User{}, "", ErrInvalidCredentials
 	}
-	user.GenerateVerificationCode()
-
-	err = userRepo.Insert(*user)
+	err = userRepo.Insert(ctx, *user)
 	if err != nil {
-		return nil, err
+		return domain.User{}, "", err
 	}
 
-	// HTML con el código de verificación
-	html := fmt.Sprintf(`
+	body := fmt.Sprintf(`
+<!DOCTYPE html>
 <html>
-  <body style="font-family: Arial, sans-serif; background:#f0f4f8; padding:20px; margin:0;">
-    <div style="max-width:520px; margin:auto; background:white; padding:25px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-      
-      <h2 style="color:#007BFF; text-align:center; margin-top:0;">Welcome to <span style="color:#0056b3;">NeuroApp</span>!</h2>
-      
-      <p style="font-size:15px; color:#333;">Hi %s,</p>
-      <p style="font-size:15px; color:#333; line-height:1.5;">
-        Thank you for signing up. Use the verification code below to activate your account:
-      </p>
-      
-      <div style="background:#007BFF; color:white; font-size:20px; font-weight:bold; padding:12px; text-align:center; border-radius:6px; letter-spacing:2px; margin:20px 0;">
-        %s
-      </div>
-      
-      <p style="font-size:14px; color:#555; line-height:1.5;">
-        If you didn’t create this account, you can safely ignore this email.
-      </p>
-      
-      <hr style="border:none; border-top:1px solid #e6e6e6; margin:25px 0;">
-      <p style="font-size:12px; color:#999; text-align:center;">
-        © 2025 NeuroApp. All rights reserved.
-      </p>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; background-color:#f9f9f9; padding:20px; }
+    .container { max-width:600px; margin:auto; background:#ffffff; border-radius:8px; padding:30px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    h1 { color:#2c3e50; }
+    p { color:#555555; line-height:1.5; }
+    .footer { margin-top:30px; font-size:12px; color:#888888; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to <span style="color:#3B82F6;">NeuroApp</span>!</h1>
+    <p>Hi %s,</p>
+    <p>We’re delighted to have you on board. NeuroApp was designed to help healthcare professionals and patients work together with ease and confidence.</p>
+    <p>You can now start exploring the platform and discover how it can support your work and improve your daily routine.</p>
+    <p>If you have any questions or need assistance, don’t hesitate to reach out to our support team.</p>
+    <p>We wish you a great start with NeuroApp!</p>
+    <div class="footer">
+      © %d NeuroApp. All rights reserved.
     </div>
-  </body>
+  </div>
+</body>
 </html>
-`, user.Name, user.VerificationCode)
+`, user.Name.Name, time.Now().Year())
 
-	err = mailService.SendMailHTML(user.Email.Mail, "Welcome to NeuroApp", html)
-	return user, err
+	err = mailService.SendEmail(
+		user.Email.Mail,
+		"Welcome to NeuroApp",
+		body, // HTML content
+		"",
+		nil,
+	)
+	return *user, "", err
 }
