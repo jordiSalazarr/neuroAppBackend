@@ -16,12 +16,14 @@ import (
 	LCdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/letter-cancellation"
 	VEMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/verbal-memory"
 	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
+	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
 	"neuro.app.jordi/internal/evaluation/infra"
 	EFinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/executive-functions"
 	LFinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/language-fluency"
 	LCinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/letter-cancellation"
 	VEMinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/verbal-memory"
 	VIMinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/visual-memory"
+	INFRAvisualspatial "neuro.app.jordi/internal/evaluation/infra/sub-tests/visual-spatial"
 
 	"neuro.app.jordi/internal/evaluation/domain"
 	"neuro.app.jordi/internal/evaluation/services"
@@ -58,6 +60,7 @@ type Repositories struct {
 	LanguageFluencyRepository           LFdomain.LanguageFluencyRepository           //TODO: add this implementation
 	VisualMemorySubtestRepository       VIMdomain.VisualMemoryRepository             //TODO: add this implementation
 	ExecutiveFunctionsSubtestRepository EFdomain.ExecutiveFunctionsSubtestRepository //TODO: add this implementation
+	VisualSpatialRepository             VPdomain.ResultRepository
 	UserRepository                      auth.UserRepository
 }
 type Services struct {
@@ -77,6 +80,7 @@ func getAppRepositories(db *sql.DB) Repositories {
 		VerbalMemorySubtestRepository:       VEMinfra.NewVerbalMemoryMYSQLRepository(db),
 		ExecutiveFunctionsSubtestRepository: EFinfra.NewExecutiveFunctionsSubtestMYSQLRepository(db),
 		LanguageFluencyRepository:           LFinfra.NewLanguageFluencyMYSQLRepository(db),
+		VisualSpatialRepository:             INFRAvisualspatial.NewClockResultMySQLRepo(db),
 		VisualMemorySubtestRepository:       VIMinfra.NewInMemoryBVMTRepo(), //TODO: implement this with a real repository (sql)
 		//VISUALSPATIALMEMORY (this and visual memory above, require ML)/TODO: implement this with a real repository (sql)
 		UserRepository: usersInfra.NewUseMYSQLRepository(db),
@@ -128,16 +132,18 @@ func (app *App) SetupRouter() *gin.Engine {
 		evaluationGroup.POST("/verbal-memory", app.VerbalMemorySubtest)
 		evaluationGroup.POST("/executive-functions", app.ExecutiveFunctionsSubtest)
 		evaluationGroup.POST("/language-fluency", app.LanguageFluencySubtest)
-		evaluationGroup.POST("/visual-memory", app.VisualMemorySubtest) // Manejador para subir imágenes
+		evaluationGroup.POST("/visual-memory", app.VisualMemorySubtest)
+		evaluationGroup.POST("/visual-spatial", app.EvaluateClockMultipart)
 		evaluationGroup.POST("/finish-evaluation", app.FinnishEvaluation)
 		evaluationGroup.GET("/:id", app.GetEvaluation)
+		evaluationGroup.GET("", app.ListEvaluations)
 	}
 
 	// Grupo para otros endpoints (ejemplo)
 	userGroup := router.Group("/v1/auth")
 	{
 		userGroup.POST("/signup", app.SignUp)
-
+		userGroup.POST("/user/:mail/:name", app.RegisterUserInfo)
 	}
 
 	protectredGroup := router.Group("/v1")

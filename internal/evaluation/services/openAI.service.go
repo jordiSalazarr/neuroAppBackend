@@ -109,13 +109,6 @@ FORMATO DE SALIDA (en español, tono clínico y profesional)
 - Funciones ejecutivas: [...]
 - Fluencia verbal: [...]
 
-### Resumen general
-[...]
-
-### Recomendaciones
-- [...]
-- [...]
-
 No menciones que eres una IA ni el formato. No incluyas datos personales.`, formattedEval)
 
 	resp, err := oa.Ask(prompt)

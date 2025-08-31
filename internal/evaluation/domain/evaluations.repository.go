@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 type EvaluationsRepository interface {
@@ -10,6 +11,8 @@ type EvaluationsRepository interface {
 	GetByID(ctx context.Context, id string) (Evaluation, error)
 
 	Update(ctx context.Context, evaluation Evaluation) error
+
+	GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string) ([]*Evaluation, error)
 }
 
 type MockEvaluationsRepository struct {

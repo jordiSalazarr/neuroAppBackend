@@ -9,6 +9,7 @@ import (
 
 func CreateLanguageFluencySubtestCommandHandler(ctx context.Context, cmd CreateLanguageFluencySubtestCommand, evaluationRepo domain.EvaluationsRepository, llmService domain.LLMService, languageFluencyRepo LFdomain.LanguageFluencyRepository) (LFdomain.LanguageFluency, error) {
 	evaluation, err := evaluationRepo.GetByID(ctx, cmd.EvaluationID)
+
 	if err != nil {
 		return LFdomain.LanguageFluency{}, err
 	}

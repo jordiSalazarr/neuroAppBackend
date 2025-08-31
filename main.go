@@ -24,21 +24,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Load config
 
-	// Create router
 	router := api.NewApp(db).SetupRouter()
 
-	// Middleware
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	// Health check
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// API routes
 	api := router.Group("/api")
 	{
 		api.GET("/ping", func(c *gin.Context) {
@@ -46,13 +41,11 @@ func main() {
 		})
 	}
 
-	// HTTP server
 	srv := &http.Server{
 		Addr:    ":8401",
 		Handler: router,
 	}
 
-	// Run server in goroutine
 	go func() {
 		log.Printf("Server listening on port 8401")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -60,7 +53,6 @@ func main() {
 		}
 	}()
 
-	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

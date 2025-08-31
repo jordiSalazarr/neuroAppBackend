@@ -1,11 +1,11 @@
 package createlanguagefluencysubtest
 
 type CreateLanguageFluencySubtestCommand struct {
-	EvaluationID string
-	Category     string
-	Words        []string
-	Duration     int // Duration in seconds
-	Language     string
-	Proficiency  string
-	TotalTime    int // Total time taken to complete the subtest
+	EvaluationID string   `json:"evaluationId"`
+	Category     string   `json:"category"`
+	Words        []string `json:"words"`
+	Duration     int      `json:"duration"`
+	Language     string   `json:"language"`
+	Proficiency  string   `json:"proficiency"`
+	TotalTime    int      `json:"totalTime"`
 }

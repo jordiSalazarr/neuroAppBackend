@@ -4,6 +4,7 @@
 package dbmodels
 
 var TableNames = struct {
+	ClockDrawSubtestResults     string
 	Evaluations                 string
 	ExecutiveFunctionsSubtests  string
 	LanguageFluencies           string
@@ -11,6 +12,7 @@ var TableNames = struct {
 	Users                       string
 	VerbalMemorySubtests        string
 }{
+	ClockDrawSubtestResults:     "clock_draw_subtest_results",
 	Evaluations:                 "evaluations",
 	ExecutiveFunctionsSubtests:  "executive_functions_subtests",
 	LanguageFluencies:           "language_fluencies",

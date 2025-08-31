@@ -3,9 +3,11 @@ package infra
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/aarondl/null/v8"
 	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/aarondl/sqlboiler/v4/queries/qm"
 	"neuro.app.jordi/database/dbmodels"
 	"neuro.app.jordi/internal/evaluation/domain"
 )
@@ -73,4 +75,40 @@ func (m *EvaluationsMYSQLRepository) GetByID(ctx context.Context, id string) (do
 	domainEvaluation := dbEvaluationToDomain(dbEvaluation)
 	return domainEvaluation, nil
 
+}
+
+func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string) ([]*domain.Evaluation, error) {
+
+	var query []qm.QueryMod
+	defaultLimit := 30
+	if limit > defaultLimit {
+		limit = defaultLimit
+	}
+	if specialist_id != "" {
+	}
+	query = append(query,
+		dbmodels.EvaluationWhere.CreatedAt.GTE(fromDate),
+		dbmodels.EvaluationWhere.CreatedAt.LTE(toDate),
+		qm.Offset(offset),
+		qm.Limit(limit),
+	)
+	if searchTerm != "" {
+		query = append(
+			query, dbmodels.EvaluationWhere.PatientName.LIKE("%"+searchTerm+"%"),
+		)
+	}
+	if specialist_id != "" {
+		query = append(query, dbmodels.EvaluationWhere.SpecialistID.EQ(specialist_id))
+	}
+
+	evaluations, err := dbmodels.Evaluations(query...).All(ctx, f.Exec)
+	if err != nil {
+		return nil, err
+	}
+	var domainEvaluations []*domain.Evaluation
+	for _, evaluation := range evaluations {
+		domainEval := dbEvaluationToDomain(evaluation)
+		domainEvaluations = append(domainEvaluations, &domainEval)
+	}
+	return domainEvaluations, nil
 }

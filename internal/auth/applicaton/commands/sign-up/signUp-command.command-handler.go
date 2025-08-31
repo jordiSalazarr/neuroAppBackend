@@ -12,17 +12,17 @@ import (
 
 var ErrInvalidCredentials = errors.New("error creating user")
 
-func SignUpCommandHandler(ctx context.Context, command SignUpCommand, userRepo domain.UserRepository, mailService mail.MailProvider) (*domain.User, string, error) {
+func SignUpCommandHandler(ctx context.Context, command SignUpCommand, userRepo domain.UserRepository, mailService mail.MailProvider) (domain.User, string, error) {
 	user, err := domain.NewUser(command.Name, command.Mail)
 	if err != nil {
-		return nil, "", err
+		return domain.User{}, "", err
 	}
 	if exists := userRepo.Exists(ctx, user.Email.Mail); exists {
-		return nil, "", ErrInvalidCredentials
+		return domain.User{}, "", ErrInvalidCredentials
 	}
 	err = userRepo.Insert(ctx, *user)
 	if err != nil {
-		return nil, "", err
+		return domain.User{}, "", err
 	}
 
 	body := fmt.Sprintf(`
@@ -61,5 +61,5 @@ func SignUpCommandHandler(ctx context.Context, command SignUpCommand, userRepo d
 		"",
 		nil,
 	)
-	return nil, "", err
+	return *user, "", err
 }
