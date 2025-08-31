@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG OPENCV_TAG=4.10.0
-ARG GO_VERSION=1.22.5
+ARG GO_VERSION=1.24.2
 
 # -------- Build stage --------
 FROM gocv/opencv:${OPENCV_TAG} AS builder
