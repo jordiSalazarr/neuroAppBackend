@@ -32,7 +32,7 @@ ENV CGO_ENABLED=1
 ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig
 
 # Compila tu binario (ajusta el path si tu main está en otro sitio)
-RUN go build -trimpath -ldflags="-s -w" -o /app/server ./cmd/server
+RUN go build -trimpath -ldflags="-s -w" -o /app/server .
 
 # -------- Runtime stage --------
 FROM gocv/opencv:${OPENCV_TAG} AS runtime
