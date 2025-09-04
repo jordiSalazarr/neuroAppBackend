@@ -10,6 +10,7 @@ import (
 	LCdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/letter-cancellation"
 	VEMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/verbal-memory"
 	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
+	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
 )
 
 func PopulateEvaluationWithSubtests(ctx context.Context,
@@ -19,6 +20,7 @@ func PopulateEvaluationWithSubtests(ctx context.Context,
 	executiveFunctionsRepository EFdomain.ExecutiveFunctionsSubtestRepository,
 	letterCancellationRepository LCdomain.LetterCancellationRepository,
 	languageFluencyRepository LFdomain.LanguageFluencyRepository,
+	visualSpatialMemotry VPdomain.ResultRepository,
 ) error {
 	if evaluation == nil {
 		return errors.New("populateEvaluationWithSubtests: evaluation is nil")
@@ -33,7 +35,7 @@ func PopulateEvaluationWithSubtests(ctx context.Context,
 	}
 	evaluation.VerbalmemorySubTest = vm
 	//TODO: ML needing tests
-	// 2) Visual Memory
+	// 2) Visual Memory //this is geometric figures
 	vim, err := visualMemoryRepository.GetByEvaluationID(ctx, evaluation.PK)
 	if err != nil {
 		return err
@@ -60,6 +62,12 @@ func PopulateEvaluationWithSubtests(ctx context.Context,
 		return err
 	}
 	evaluation.LanguageFluencySubTest = lf
+	// 5) Visual Spatial
+	vp, err := visualSpatialMemotry.GetByEvaluationID(ctx, evaluation.PK)
+	if err != nil {
+		return err
+	}
+	evaluation.VisualSpatialSubTest = *vp
 
 	return merr
 }

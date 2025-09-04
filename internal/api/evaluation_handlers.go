@@ -169,7 +169,7 @@ func (app *App) GetEvaluation(c *gin.Context) {
 	var query getevaluation.GetEvaluationQuery
 	id := c.Params.ByName("id")
 	query.EvaluationID = id
-	evaluation, err := getevaluation.GetEvaluationQueryHandler(c.Request.Context(), query, app.Repositories.EvaluationsRepository, app.Repositories.VerbalMemorySubtestRepository, app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository)
+	evaluation, err := getevaluation.GetEvaluationQueryHandler(c.Request.Context(), query, app.Repositories.EvaluationsRepository, app.Repositories.VerbalMemorySubtestRepository, app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository, app.Repositories.VisualSpatialRepository)
 	if err != nil {
 		app.Logger.Error(c.Request.Context(), "error getting evaluation", err, nil)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
@@ -215,7 +215,7 @@ func (app *App) FinnishEvaluation(c *gin.Context) {
 	evaluation, err := finishevaluation.FinisEvaluationCommanndHandler(c.Request.Context(),
 		command, app.Repositories.EvaluationsRepository,
 		app.Services.LLMService, app.Services.FileFormater, reportsPublisher, app.Repositories.VerbalMemorySubtestRepository,
-		app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository)
+		app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository, app.Repositories.VisualSpatialRepository)
 	if err != nil {
 		app.Logger.Error(c.Request.Context(), "error when finishiing evaluation", err, c.Keys)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -371,7 +371,7 @@ func (app *App) VisualMemorySubtest(c *gin.Context) {
 		app.ImageStorage,
 		int(app.MaxMemory),
 		app.Scorer,
-		app.Services.TemplateResolver,
+		// app.Services.TemplateResolver,
 	)
 	if err != nil {
 		app.Logger.Error(c.Request.Context(), "error when creating visual memory evaluation", err, c.Keys)
@@ -380,7 +380,7 @@ func (app *App) VisualMemorySubtest(c *gin.Context) {
 		case errors.Is(err, VIMdomain.ErrTooLarge):
 			status = http.StatusRequestEntityTooLarge
 		case errors.Is(err, VIMdomain.ErrEmptyEvaluationID),
-			errors.Is(err, VIMdomain.ErrEmptyFigureName),
+			errors.Is(err, VIMdomain.ErrEmptyEvaluationID),
 			errors.Is(err, VIMdomain.ErrNoImageBytes),
 			errors.Is(err, VIMdomain.ErrUnsupportedMIME):
 			status = http.StatusBadRequest

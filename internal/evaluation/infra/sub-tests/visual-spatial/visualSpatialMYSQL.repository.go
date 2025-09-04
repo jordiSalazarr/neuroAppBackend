@@ -141,7 +141,7 @@ func (r *ClockResultMySQLRepo) GetByID(ctx context.Context, id string) (*VPdomai
 }
 
 func (r *ClockResultMySQLRepo) GetByEvaluationID(ctx context.Context, id string) (*VPdomain.ClockDrawResult, error) {
-	m, err := dbmodels.ClockDrawSubtestResults(dbmodels.ClockDrawSubtestResultWhere.ID.LIKE(id)).One(ctx, r.DB)
+	m, err := dbmodels.ClockDrawSubtestResults(dbmodels.ClockDrawSubtestResultWhere.EvaluationID.LIKE(id)).One(ctx, r.DB)
 	if err != nil {
 		return nil, err
 	}

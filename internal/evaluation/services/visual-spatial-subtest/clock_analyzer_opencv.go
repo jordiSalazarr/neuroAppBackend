@@ -393,11 +393,6 @@ func encodePNG(m gocv.Mat) []byte {
 	return b.GetBytes()
 }
 
-// Un extremo del segmento debe nacer "cerca" del centro
-func nearCenter(p image.Point, c image.Point, r float64, k float64) bool {
-	return distPts(p, c) <= r*k
-}
-
 // Deduplica por ángulo para evitar coger dos segmentos casi colineales
 func dedupByAngle(in []cand, minSepDeg float64) []cand {
 	out := make([]cand, 0, len(in))

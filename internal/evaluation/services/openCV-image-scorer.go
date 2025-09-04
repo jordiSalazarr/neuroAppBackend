@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
-	"neuro.app.jordi/internal/evaluation/services/bvmtcv"
 )
 
 type LocalTemplateResolver struct{ Root string }
@@ -72,7 +71,7 @@ func (r LocalTemplateResolver) Resolve(name string) (string, error) {
 
 type OpenCVBVMTScorer struct{}
 
-func (OpenCVBVMTScorer) Score(tpl, pat string) (VIMdomain.BVMTScore, error) {
+func (OpenCVBVMTScorer) Score(tpl VIMdomain.ShapeName, pat string) (VIMdomain.GeoShapeScore, error) {
 
-	return bvmtcv.ScoreBVMT(tpl, pat)
+	return VIMdomain.GeoShapeScore{}, nil
 }

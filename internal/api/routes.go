@@ -50,7 +50,7 @@ type App struct {
 	Services     Services
 	MaxMemory    int64 // MaxMemory for multipart forms, e.g., 8 << 20 is 8 MB
 	ImageStorage VIMdomain.ImageStorage
-	Scorer       VIMdomain.BVMTScorer
+	Scorer       VIMdomain.GeoShapeScorer
 	Logger       logging.Logger
 }
 type Repositories struct {
@@ -68,8 +68,8 @@ type Services struct {
 	MailService       mail.MailProvider
 	JwtService        *jwtService.Service
 	EncryptionService auth.EncryptionService
-	TemplateResolver  VIMdomain.TemplateResolver
-	FileFormater      domain.FileFormaterService
+	// TemplateResolver  VIMdomain.TemplateResolver
+	FileFormater domain.FileFormaterService
 }
 
 func getAppRepositories(db *sql.DB) Repositories {
@@ -81,16 +81,15 @@ func getAppRepositories(db *sql.DB) Repositories {
 		ExecutiveFunctionsSubtestRepository: EFinfra.NewExecutiveFunctionsSubtestMYSQLRepository(db),
 		LanguageFluencyRepository:           LFinfra.NewLanguageFluencyMYSQLRepository(db),
 		VisualSpatialRepository:             INFRAvisualspatial.NewClockResultMySQLRepo(db),
-		VisualMemorySubtestRepository:       VIMinfra.NewInMemoryBVMTRepo(), //TODO: implement this with a real repository (sql)
-		//VISUALSPATIALMEMORY (this and visual memory above, require ML)/TODO: implement this with a real repository (sql)
+		// VisualMemorySubtestRepository:       VIMinfra.NewInMemoryBVMTRepo(), //TODO: implement this with a real repository (sql)
 		UserRepository: usersInfra.NewUseMYSQLRepository(db),
 	}
 }
 func getAppServices() Services {
 	return Services{
-		LLMService:        services.NewOpenAIService(),
-		MailService:       mail.NewMailer(),
-		TemplateResolver:  services.LocalTemplateResolver{},
+		LLMService:  services.NewOpenAIService(),
+		MailService: mail.NewMailer(),
+		// TemplateResolver:  services.LocalTemplateResolver{},
 		EncryptionService: encryption.NewEncryptionService(),
 		JwtService:        jwtService.New(),
 	}
@@ -121,8 +120,6 @@ func (app *App) SetupRouter() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 	router.Use(rateLimiter, gin.Recovery())
-
-	//TODO: routes missing: finish-evaluation, getEvaluation, getUser
 
 	// Grupo para endpoints relacionados con evaluaciones
 	evaluationGroup := router.Group("/v1/evaluations")

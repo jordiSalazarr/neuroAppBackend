@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -40,14 +41,17 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"message": "pong"})
 		})
 	}
-
+	port := fmt.Sprintf(":%s", os.Getenv("PORT"))
+	if port == "" {
+		port = ":8080"
+	}
 	srv := &http.Server{
-		Addr:    ":8401",
+		Addr:    port,
 		Handler: router,
 	}
 
 	go func() {
-		log.Printf("Server listening on port 8401")
+		log.Printf("Server listening")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Listen error: %s\n", err)
 		}

@@ -66,6 +66,24 @@ DOMINIOS Y MÉTRICAS (resumen operativo)
    - Score (0–100), UniqueValid, Intrusions, Perseverations, WordsPerMinute, IntrusionRate, PersevRate.
    - Déficit léxico/ejecutivo: ↓uniqueValid/WPM, ↑intrusions/perseverations.
 
+ 6)  Visuoespacial / Construcción — Clock Drawing Test (CDT)
+
+Métricas: Score (0–100), Accuracy, OmissionRate, CommissionRate, ContourClosure, Roundness/Eccentricity, CenterOffset, NumberPresence (0–12), NumberOrderErrors, NumberPlacementDeviation° (RMSE angular), QuadrantBalance, LeftNeglectIndex, HandsPresent (0/1/2), HandAnglesError° (hora/minuto), HandLengthRatio, Overlaps/Crossings, Perseverations, SelfCorrections, DurationSec.
+
+Déficits típicos:
+• Atencional: ↑omissions/commissionRate y ↓accuracy/score.
+• Visuoespacial/constructivo: ↑NumberPlacementDeviation°, ↑CenterOffset, ↓ContourClosure, ↑LeftNeglectIndex, QuadrantBalance muy asimétrico.
+• Ejecutivo/planificación: HandAnglesError° alto, HandLengthRatio ≈ 1, números fuera de orden/aglomerados, perseverations/overlaps.
+• Comprensión/semántico: circunferencia y números correctos pero sin manos o con hora no solicitada.
+
+Control de calidad de imagen: si IoU < 0.60 o SSIM < 0.75 del dial vs círculo ideal, o blur alto → advertir “posible baja calidad de captura” y suavizar conclusiones.
+
+
+
+
+
+   
+
 UMBRAL HEURÍSTICO (no diagnósticos, solo guía de interpretación)
 - 80–100: rendimiento preservado
 - 60–79: rendimiento dentro de lo esperado/leve fragilidad
@@ -204,9 +222,9 @@ func formatEvaluationAsText(ev domain.Evaluation) string {
 	o.BVMT.Status = string(ev.VisualMemorySubTest.Status)
 	if ev.VisualMemorySubTest.Score != nil {
 		o.BVMT.FinalScore = &ev.VisualMemorySubTest.Score.FinalScore
-		o.BVMT.IoU = &ev.VisualMemorySubTest.Score.IoU
-		o.BVMT.SSIM = &ev.VisualMemorySubTest.Score.SSIM
-		o.BVMT.PSNR = &ev.VisualMemorySubTest.Score.PSNR
+		o.BVMT.IoU = ev.VisualMemorySubTest.Score.IoU
+		o.BVMT.SSIM = ev.VisualMemorySubTest.Score.SideCV
+		o.BVMT.PSNR = ev.VisualMemorySubTest.Score.Circularity
 	}
 
 	// Verbal Memory

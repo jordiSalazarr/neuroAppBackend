@@ -11,6 +11,7 @@ var TableNames = struct {
 	LettersCancellationSubtests string
 	Users                       string
 	VerbalMemorySubtests        string
+	VisualMemorySubtest         string
 }{
 	ClockDrawSubtestResults:     "clock_draw_subtest_results",
 	Evaluations:                 "evaluations",
@@ -19,4 +20,5 @@ var TableNames = struct {
 	LettersCancellationSubtests: "letters_cancellation_subtests",
 	Users:                       "users",
 	VerbalMemorySubtests:        "verbal_memory_subtests",
+	VisualMemorySubtest:         "visual_memory_subtest",
 }

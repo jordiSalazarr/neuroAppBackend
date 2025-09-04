@@ -6,7 +6,7 @@ development:
 
 master:
   dialect: mysql
-  datasource: core_prod:ThXoWkVOAp0IlvQM07ZbGmGdJjIM@unix(/cloudsql/cityxerpa-b57e7:europe-west1:ew1)/core_prod?parseTime=true
+  datasource: https://mysql-production-33dd.up.railway.app/
   dir: migrations
   table: migrations
 

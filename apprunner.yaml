@@ -1,0 +1,22 @@
+version: 1.0
+runtime: go1
+build:
+  commands:
+    build:
+      - go build -o app .
+run:
+  command: ./app
+  network:
+    port: 8080
+    env: PORT
+  env:
+    - name: PORT
+      value: "8080"
+    - name: ENVIRONMENT
+      value: "prod"
+    - name: SMTP_HOST
+      value: "live.smtp.mailtrap.io"
+    - name: SMTP_PORT
+      value: "587"
+    - name: SMTP_FROM
+      value: "hello@demomailtrap.com"

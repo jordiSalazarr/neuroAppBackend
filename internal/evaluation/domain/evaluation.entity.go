@@ -10,6 +10,7 @@ import (
 	LCdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/letter-cancellation"
 	VEMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/verbal-memory"
 	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
+	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
 )
 
 const MaxUserName = 50
@@ -40,10 +41,11 @@ type Evaluation struct {
 	CreatedAt                 time.Time               `json:"createdAt"`
 	CurrentStatus             EvaluationCurrentStatus `json:"currentStatus"`
 	LetterCancellationSubTest LCdomain.LettersCancellationSubtest
-	VisualMemorySubTest       VIMdomain.BVMTSubtest
+	VisualMemorySubTest       VIMdomain.GeoFigureSubtest
 	VerbalmemorySubTest       VEMdomain.VerbalMemorySubtest
 	ExecutiveFunctionSubTest  EFdomain.ExecutiveFunctionsSubtest
 	LanguageFluencySubTest    LFdomain.LanguageFluency
+	VisualSpatialSubTest      VPdomain.ClockDrawResult
 }
 
 func newPatientName(name string) (string, error) {
