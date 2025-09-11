@@ -110,13 +110,14 @@ func NewApp(db *sql.DB) *App {
 func (app *App) SetupRouter() *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://neuroappbackend-production.up.railway.app"},
+		AllowOrigins:     []string{"https://neuro-next-web-wk1p.vercel.app"}, // tu dominio front
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
-		AllowCredentials: false, // true solo si usas cookies
+		AllowCredentials: true, // activa si usas cookies o Authorization headers
 		MaxAge:           12 * time.Hour,
 	}))
+
 	router.Use(rateLimiter, gin.Recovery())
 
 	// Grupo para endpoints relacionados con evaluaciones
