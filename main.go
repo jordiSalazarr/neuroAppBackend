@@ -31,10 +31,6 @@ func main() {
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
-
 	api := router.Group("/api")
 	{
 		api.GET("/ping", func(c *gin.Context) {
