@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"net/http"
 	"os"
 	"time"
 
@@ -29,7 +30,6 @@ import (
 	jwtService "neuro.app.jordi/internal/shared/jwt"
 	logging "neuro.app.jordi/internal/shared/logger"
 	"neuro.app.jordi/internal/shared/mail"
-	"neuro.app.jordi/internal/shared/midleware"
 )
 
 // var limiter = rate.NewLimiter(100, 5)
@@ -106,43 +106,49 @@ func NewApp(db *sql.DB) *App {
 }
 
 func (app *App) SetupRouter() *gin.Engine {
-	router := gin.Default()
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://neuro-next-web-wk1p.vercel.app"}, // tu dominio front
+	r := gin.New()
+	r.SetTrustedProxies(nil)
+	r.Use(gin.Logger(), gin.Recovery())
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"https://neuro-next-web-wk1p.vercel.app",
+			"http://localhost:3000",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
+		AllowHeaders:     []string{"*"}, // ← preflights often send various headers
 		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
-		AllowCredentials: true, // activa si usas cookies o Authorization headers
+		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// router.Use(rateLimiter, gin.Recovery())
+	// Health BEFORE any services
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	// Answer ALL preflights
+	r.OPTIONS("/*path", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 
-	// Grupo para endpoints relacionados con evaluaciones
-	evaluationGroup := router.Group("/v1/evaluations")
+	// --- your groups below ---
+	eval := r.Group("/v1/evaluations")
 	{
-		evaluationGroup.POST("", app.CreateEvaluation)
-		evaluationGroup.POST("/letter-cancellation", app.CreateLetterCancellationSubtest)
-		evaluationGroup.POST("/verbal-memory", app.VerbalMemorySubtest)
-		evaluationGroup.POST("/executive-functions", app.ExecutiveFunctionsSubtest)
-		evaluationGroup.POST("/language-fluency", app.LanguageFluencySubtest)
-		evaluationGroup.POST("/visual-memory", app.CreateVisualMemorySubtest)
-		evaluationGroup.POST("/visual-spatial", app.CreateVisualSpatialSubtest)
-		evaluationGroup.POST("/finish-evaluation", app.FinnishEvaluation)
-		evaluationGroup.GET("/:id", app.GetEvaluation)
-		evaluationGroup.GET("", app.ListEvaluations)
+		eval.POST("", app.CreateEvaluation)
+		eval.POST("/letter-cancellation", app.CreateLetterCancellationSubtest)
+		eval.POST("/verbal-memory", app.VerbalMemorySubtest)
+		eval.POST("/executive-functions", app.ExecutiveFunctionsSubtest)
+		eval.POST("/language-fluency", app.LanguageFluencySubtest)
+		eval.POST("/visual-memory", app.CreateVisualMemorySubtest)
+		eval.POST("/visual-spatial", app.CreateVisualSpatialSubtest)
+		eval.POST("/finish-evaluation", app.FinnishEvaluation)
+		eval.GET("/:id", app.GetEvaluation)
+		eval.GET("", app.ListEvaluations)
 	}
 
-	// Grupo para otros endpoints (ejemplo)
-	userGroup := router.Group("/v1/auth")
+	user := r.Group("/v1/auth")
 	{
-		userGroup.POST("/signup", app.SignUp)
-		userGroup.POST("/user/:mail/:name", app.RegisterUserInfo)
+		user.POST("/signup", app.SignUp)
+		user.POST("/user/:mail/:name", app.RegisterUserInfo)
 	}
 
-	protectredGroup := router.Group("/v1")
-	{
-		protectredGroup.Use(midleware.ExtractJWTFromRequest(app.Services.JwtService))
-	}
-	return router
+	return r
 }
