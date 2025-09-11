@@ -6,7 +6,7 @@ type ExecutiveFunctionsSubtestRepository interface {
 	Save(ctx context.Context, subtest ExecutiveFunctionsSubtest) error
 	GetByID(ctx context.Context, id string) (ExecutiveFunctionsSubtest, error)
 
-	GetByEvaluationID(ctx context.Context, evaluationID string) (ExecutiveFunctionsSubtest, error)
+	GetByEvaluationID(ctx context.Context, evaluationID string) ([]ExecutiveFunctionsSubtest, error)
 }
 
 type MockExecutiveFunctionsSubtestRepository struct {

@@ -9,8 +9,11 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
-	auth "neuro.app.jordi/internal/auth/domain"
-	usersInfra "neuro.app.jordi/internal/auth/infra"
+	authD "neuro.app.jordi/internal/auth/domain"
+	"neuro.app.jordi/internal/evaluation/domain"
+	services "neuro.app.jordi/internal/evaluation/services/openAI"
+
+	authI "neuro.app.jordi/internal/auth/infra"
 	EFdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/executive-functions"
 	LFdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/language-fluency"
 	LCdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/letter-cancellation"
@@ -24,9 +27,6 @@ import (
 	VEMinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/verbal-memory"
 	VIMinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/visual-memory"
 	INFRAvisualspatial "neuro.app.jordi/internal/evaluation/infra/sub-tests/visual-spatial"
-
-	"neuro.app.jordi/internal/evaluation/domain"
-	"neuro.app.jordi/internal/evaluation/services"
 	"neuro.app.jordi/internal/shared/encryption"
 	jwtService "neuro.app.jordi/internal/shared/jwt"
 	logging "neuro.app.jordi/internal/shared/logger"
@@ -49,9 +49,8 @@ type App struct {
 	Repositories Repositories
 	Services     Services
 	MaxMemory    int64 // MaxMemory for multipart forms, e.g., 8 << 20 is 8 MB
-	ImageStorage VIMdomain.ImageStorage
-	Scorer       VIMdomain.GeoShapeScorer
-	Logger       logging.Logger
+	// ImageStorage VIMdomain.ImageStorage
+	Logger logging.Logger
 }
 type Repositories struct {
 	EvaluationsRepository               domain.EvaluationsRepository                 //TODO: add this implementation
@@ -61,13 +60,13 @@ type Repositories struct {
 	VisualMemorySubtestRepository       VIMdomain.VisualMemoryRepository             //TODO: add this implementation
 	ExecutiveFunctionsSubtestRepository EFdomain.ExecutiveFunctionsSubtestRepository //TODO: add this implementation
 	VisualSpatialRepository             VPdomain.ResultRepository
-	UserRepository                      auth.UserRepository
+	UserRepository                      authD.UserRepository
 }
 type Services struct {
 	LLMService        domain.LLMService
 	MailService       mail.MailProvider
 	JwtService        *jwtService.Service
-	EncryptionService auth.EncryptionService
+	EncryptionService authD.EncryptionService
 	// TemplateResolver  VIMdomain.TemplateResolver
 	FileFormater domain.FileFormaterService
 }
@@ -80,9 +79,9 @@ func getAppRepositories(db *sql.DB) Repositories {
 		VerbalMemorySubtestRepository:       VEMinfra.NewVerbalMemoryMYSQLRepository(db),
 		ExecutiveFunctionsSubtestRepository: EFinfra.NewExecutiveFunctionsSubtestMYSQLRepository(db),
 		LanguageFluencyRepository:           LFinfra.NewLanguageFluencyMYSQLRepository(db),
-		VisualSpatialRepository:             INFRAvisualspatial.NewClockResultMySQLRepo(db),
-		// VisualMemorySubtestRepository:       VIMinfra.NewInMemoryBVMTRepo(), //TODO: implement this with a real repository (sql)
-		UserRepository: usersInfra.NewUseMYSQLRepository(db),
+		VisualSpatialRepository:             INFRAvisualspatial.NewVisualSpatialMYSQLRepo(db),
+		VisualMemorySubtestRepository:       VIMinfra.NewVisualMemoryMYSQLRepository(db), //TODO: implement this with a real repository (sql)
+		UserRepository:                      authI.NewUseMYSQLRepository(db),
 	}
 }
 func getAppServices() Services {
@@ -102,10 +101,9 @@ func NewApp(db *sql.DB) *App {
 		// FileFormater:      services.NewFileFormatter(),
 		Repositories: appRepositories,
 		Services:     appServices,
-		ImageStorage: VIMinfra.NewLocalImageStorage("./images"),
-		MaxMemory:    10 << 20, // 10 MB
-		Scorer:       services.OpenCVBVMTScorer{},
-		Logger:       logging.NewSlogLogger(os.Getenv("environment")),
+		// ImageStorage: VIMinfra.NewLocalImageStorage("./images"),
+		MaxMemory: 10 << 20, // 10 MB
+		Logger:    logging.NewSlogLogger(os.Getenv("environment")),
 	}
 }
 
@@ -129,8 +127,8 @@ func (app *App) SetupRouter() *gin.Engine {
 		evaluationGroup.POST("/verbal-memory", app.VerbalMemorySubtest)
 		evaluationGroup.POST("/executive-functions", app.ExecutiveFunctionsSubtest)
 		evaluationGroup.POST("/language-fluency", app.LanguageFluencySubtest)
-		evaluationGroup.POST("/visual-memory", app.VisualMemorySubtest)
-		evaluationGroup.POST("/visual-spatial", app.EvaluateClockMultipart)
+		evaluationGroup.POST("/visual-memory", app.CreateVisualMemorySubtest)
+		evaluationGroup.POST("/visual-spatial", app.CreateVisualSpatialSubtest)
 		evaluationGroup.POST("/finish-evaluation", app.FinnishEvaluation)
 		evaluationGroup.GET("/:id", app.GetEvaluation)
 		evaluationGroup.GET("", app.ListEvaluations)

@@ -4,7 +4,7 @@ package createevaluation
 // 	"context"
 // 	"testing"
 
-// 	"github.com/stretchr/testify/assert"
+// 	"github.com/zeebo/assert"
 // 	"neuro.app.jordi/internal/evaluation/domain"
 // 	"neuro.app.jordi/internal/shared/mail"
 // )
@@ -14,11 +14,6 @@ package createevaluation
 // }
 
 // var mockCommands = []CreateEvaluationCommand{{
-// 	TotalScore:       100,
-// 	MemoryScore:      ptrFromInt(90),
-// 	AtentionScore:    ptrFromInt(20),
-// 	MotoreScore:      ptrFromInt(30),
-// 	SpatialViewScore: ptrFromInt(0),
 // 	PatientName:      "John Doe",
 // 	SpecialistMail:   "wharecer@gmail.com",
 // 	SpecialistID:     "specialist-023",

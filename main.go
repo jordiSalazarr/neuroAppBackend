@@ -42,8 +42,8 @@ func main() {
 		})
 	}
 	port := fmt.Sprintf(":%s", os.Getenv("PORT"))
-	if port == "" {
-		port = ":8080"
+	if port == "" || port == ":" {
+		port = ":8401"
 	}
 	srv := &http.Server{
 		Addr:    port,

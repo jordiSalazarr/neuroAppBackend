@@ -1,11 +1,8 @@
 package api
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,9 +18,6 @@ import (
 	listevaluations "neuro.app.jordi/internal/evaluation/application/queries/get-evaluations"
 	"neuro.app.jordi/internal/evaluation/domain"
 	reports "neuro.app.jordi/internal/evaluation/domain/services"
-	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
-	visualspatialsubtest "neuro.app.jordi/internal/evaluation/services/visual-spatial-subtest"
-	"neuro.app.jordi/internal/evaluation/utils"
 )
 
 type EvaluationAPI struct {
@@ -300,165 +294,36 @@ func (app *App) LanguageFluencySubtest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"subtest": subtest})
 }
 
-func (app *App) VisualMemorySubtest(c *gin.Context) {
-	// (Opcional) límite total del cuerpo para evitar abusos
-	if app.MaxMemory > 0 {
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, app.MaxMemory)
-	}
-
-	// Limita cuánto del multipart se guarda en RAM; el resto va a /tmp
-	if err := c.Request.ParseMultipartForm(app.MaxMemory); err != nil {
+func (app *App) CreateVisualMemorySubtest(c *gin.Context) {
+	var cmd createvisualmemorysubtest.CreateVisualMemorySubtestCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
 		app.Logger.Error(c.Request.Context(), "error parsing when creating visual memory evaluation", err, c.Keys)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid multipart: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	defer func() {
-		if c.Request.MultipartForm != nil {
-			_ = c.Request.MultipartForm.RemoveAll()
-		}
-	}()
 
-	evalID := c.PostForm("evaluation_id")
-	figure := c.PostForm("figure_name")
-	capturedStr := c.PostForm("captured_at")
-
-	var capturedAt time.Time
-	if capturedStr != "" {
-		t, err := time.Parse(time.RFC3339, capturedStr)
-		if err != nil {
-			app.Logger.Error(c.Request.Context(), "error when creating visual memory evaluation", err, c.Keys)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "captured_at must be RFC3339"})
-			return
-		}
-		capturedAt = t
-	}
-
-	// Archivo
-	fileHeader, err := c.FormFile("image")
+	sub, err := createvisualmemorysubtest.CreateVisualMemoryCommandHandler(c.Request.Context(), cmd, app.Repositories.VisualMemorySubtestRepository)
 	if err != nil {
 		app.Logger.Error(c.Request.Context(), "error when creating visual memory evaluation", err, c.Keys)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing image: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	file, err := fileHeader.Open()
-	if err != nil {
-		app.Logger.Error(c.Request.Context(), "error when creating visual memory evaluation", err, c.Keys)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot open image: " + err.Error()})
-		return
-	}
-	defer file.Close()
-
-	// Lee con límite (por-archivo)
-	raw, err := utils.ReadAllLimited(file, (app.MaxMemory))
-	if err != nil {
-		app.Logger.Error(c.Request.Context(), "error when creating visual memory evaluation", err, c.Keys)
-		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": err.Error()})
-		return
-	}
-
-	cmd := createvisualmemorysubtest.CreateBVMTSubtestCommand{
-		EvaluationID: evalID,
-		FigureName:   figure,
-		CapturedAt:   capturedAt,
-		ImageBytes:   raw,
-		ContentType:  fileHeader.Header.Get("Content-Type"), // puede venir vacío
-	}
-
-	sub, err := createvisualmemorysubtest.CreateVisualMemoryCommandHandler(
-		c.Request.Context(),
-		cmd,
-		app.Repositories.VisualMemorySubtestRepository,
-		app.ImageStorage,
-		int(app.MaxMemory),
-		app.Scorer,
-		// app.Services.TemplateResolver,
-	)
-	if err != nil {
-		app.Logger.Error(c.Request.Context(), "error when creating visual memory evaluation", err, c.Keys)
-		status := http.StatusBadRequest
-		switch {
-		case errors.Is(err, VIMdomain.ErrTooLarge):
-			status = http.StatusRequestEntityTooLarge
-		case errors.Is(err, VIMdomain.ErrEmptyEvaluationID),
-			errors.Is(err, VIMdomain.ErrEmptyEvaluationID),
-			errors.Is(err, VIMdomain.ErrNoImageBytes),
-			errors.Is(err, VIMdomain.ErrUnsupportedMIME):
-			status = http.StatusBadRequest
-		default:
-			status = http.StatusInternalServerError
-		}
-		c.JSON(status, gin.H{"error": err.Error()})
-		return
-	}
-
 	c.JSON(http.StatusCreated, sub)
 }
 
-// POST /api/subtests/clock/evaluate?return_debug=true
-// FormData: evaluation_id, expected_hour, expected_min, image=@file.png
-func (app *App) EvaluateClockMultipart(c *gin.Context) {
-	// 20 MB como guía (Gin no requiere ParseMultipartForm explícito)
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 20<<20)
-
-	evaluationID := c.PostForm("evaluation_id")
-	if evaluationID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "evaluation_id requerido"})
+func (app *App) CreateVisualSpatialSubtest(c *gin.Context) {
+	var cmd createvisualspatialsubtest.CreateVisualSpatialSubtestCommand
+	if err := c.ShouldBindJSON(&cmd); err != nil {
+		app.Logger.Error(c.Request.Context(), "error parsing when creating visual spatial evaluation", err, c.Keys)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var expectedHour, expectedMin int
-	if v := c.PostForm("expected_hour"); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "expected_hour inválido"})
-			return
-		}
-		expectedHour = n
-	}
-	if v := c.PostForm("expected_min"); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "expected_min inválido"})
-			return
-		}
-		expectedMin = n
-	}
-
-	returnDebug := c.Query("return_debug") == "true"
-
-	// archivo
-	fileHeader, err := c.FormFile("image")
+	sub, err := createvisualspatialsubtest.CreateViusualSpatialCommandHandler(c.Request.Context(), cmd, app.Repositories.VisualSpatialRepository)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "archivo 'image' requerido"})
+		app.Logger.Error(c.Request.Context(), "error when creating visual spatial evaluation", err, c.Keys)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	f, err := fileHeader.Open()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no se pudo abrir 'image'"})
-		return
-	}
-	defer f.Close()
-
-	imgBytes, err := io.ReadAll(f)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "no se pudo leer 'image'"})
-		return
-	}
-
-	cmd := createvisualspatialsubtest.EvaluateClockDrawingCommand{
-		EvaluationID: evaluationID,
-		ImageBytes:   imgBytes,
-		ExpectedHour: expectedHour,
-		ExpectedMin:  expectedMin,
-		ReturnDebug:  returnDebug,
-	}
-	analyzer := visualspatialsubtest.NewGoCVClockAnalyzer()
-	res, err := createvisualspatialsubtest.CreateViusualSpatialCommandHandler(c.Request.Context(), cmd, analyzer, app.Repositories.VisualSpatialRepository)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error procesando: " + err.Error()})
-		return
-	}
-
-	c.Header("Content-Type", "application/json; charset=utf-8")
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusCreated, sub)
 }

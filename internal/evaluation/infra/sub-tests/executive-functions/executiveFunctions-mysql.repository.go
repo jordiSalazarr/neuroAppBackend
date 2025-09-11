@@ -79,12 +79,16 @@ func (m *ExecutivefunctionsMYSQLRepository) GetByID(ctx context.Context, id stri
 	return dBToDomainExecutiveFunctions(dbExecutiveFunctionSubtest), nil
 }
 
-func (m *ExecutivefunctionsMYSQLRepository) GetByEvaluationID(ctx context.Context, evaluationID string) (EFdomain.ExecutiveFunctionsSubtest, error) {
+func (m *ExecutivefunctionsMYSQLRepository) GetByEvaluationID(ctx context.Context, evaluationID string) ([]EFdomain.ExecutiveFunctionsSubtest, error) {
+	var out []EFdomain.ExecutiveFunctionsSubtest
 	dbExecutiveFunctionSubtest, err := dbmodels.ExecutiveFunctionsSubtests(
 		dbmodels.ExecutiveFunctionsSubtestWhere.EvaluationID.EQ(evaluationID),
-	).One(ctx, m.Exec)
+	).All(ctx, m.Exec)
 	if err != nil {
-		return EFdomain.ExecutiveFunctionsSubtest{}, nil
+		return []EFdomain.ExecutiveFunctionsSubtest{}, nil
 	}
-	return dBToDomainExecutiveFunctions(dbExecutiveFunctionSubtest), nil
+	for _, subtest := range dbExecutiveFunctionSubtest {
+		out = append(out, dBToDomainExecutiveFunctions(subtest))
+	}
+	return out, nil
 }

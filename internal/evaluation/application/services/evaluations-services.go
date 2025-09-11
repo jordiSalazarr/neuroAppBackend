@@ -28,41 +28,36 @@ func PopulateEvaluationWithSubtests(ctx context.Context,
 
 	var merr error
 
-	// 1) Verbal Memory
 	vm, err := verbalMemoryRepository.GetByEvaluationID(ctx, evaluation.PK)
 	if err != nil {
 		return err
 	}
 	evaluation.VerbalmemorySubTest = vm
-	//TODO: ML needing tests
-	// 2) Visual Memory //this is geometric figures
-	vim, err := visualMemoryRepository.GetByEvaluationID(ctx, evaluation.PK)
+
+	vim, err := visualMemoryRepository.GetLastByEvaluationID(ctx, evaluation.PK)
 	if err != nil {
 		return err
 	}
 	evaluation.VisualMemorySubTest = vim
 
-	// 3) Executive Functions (TMT, etc.)
 	ef, err := executiveFunctionsRepository.GetByEvaluationID(ctx, evaluation.PK)
 	if err != nil {
 		return err
 	}
 	evaluation.ExecutiveFunctionSubTest = ef
 
-	// 4) Letter Cancellation (Atención sostenida)
 	lc, err := letterCancellationRepository.GetByEvaluationID(ctx, evaluation.PK)
 	if err != nil {
 		return err
 	}
 	evaluation.LetterCancellationSubTest = lc
 
-	// 5) Language Fluency
 	lf, err := languageFluencyRepository.GetByEvaluationID(ctx, evaluation.PK)
 	if err != nil {
 		return err
 	}
 	evaluation.LanguageFluencySubTest = lf
-	// 5) Visual Spatial
+
 	vp, err := visualSpatialMemotry.GetByEvaluationID(ctx, evaluation.PK)
 	if err != nil {
 		return err

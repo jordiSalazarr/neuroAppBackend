@@ -24,22 +24,13 @@ import (
 
 // VisualMemorySubtest is an object representing the database table.
 type VisualMemorySubtest struct {
-	ID           string       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	EvaluationID string       `boil:"evaluation_id" json:"evaluation_id" toml:"evaluation_id" yaml:"evaluation_id"`
-	Shape        string       `boil:"shape" json:"shape" toml:"shape" yaml:"shape"`
-	Pass         bool         `boil:"pass" json:"pass" toml:"pass" yaml:"pass"`
-	Score        float64      `boil:"score" json:"score" toml:"score" yaml:"score"`
-	Reasons      string       `boil:"reasons" json:"reasons" toml:"reasons" yaml:"reasons"`
-	Iou          null.Float64 `boil:"iou" json:"iou,omitempty" toml:"iou" yaml:"iou,omitempty"`
-	Circularity  null.Float64 `boil:"circularity" json:"circularity,omitempty" toml:"circularity" yaml:"circularity,omitempty"`
-	AngleRmse    null.Float64 `boil:"angle_rmse" json:"angle_rmse,omitempty" toml:"angle_rmse" yaml:"angle_rmse,omitempty"`
-	SideCV       null.Float64 `boil:"side_cv" json:"side_cv,omitempty" toml:"side_cv" yaml:"side_cv,omitempty"`
-	CenterX      null.Int     `boil:"center_x" json:"center_x,omitempty" toml:"center_x" yaml:"center_x,omitempty"`
-	CenterY      null.Int     `boil:"center_y" json:"center_y,omitempty" toml:"center_y" yaml:"center_y,omitempty"`
-	BboxW        null.Int     `boil:"bbox_w" json:"bbox_w,omitempty" toml:"bbox_w" yaml:"bbox_w,omitempty"`
-	BboxH        null.Int     `boil:"bbox_h" json:"bbox_h,omitempty" toml:"bbox_h" yaml:"bbox_h,omitempty"`
-	CreatedAt    time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt    time.Time    `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID           string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	EvaluationID string      `boil:"evaluation_id" json:"evaluation_id" toml:"evaluation_id" yaml:"evaluation_id"`
+	Score        int         `boil:"score" json:"score" toml:"score" yaml:"score"`
+	Note         string      `boil:"note" json:"note" toml:"note" yaml:"note"`
+	ImageSRC     null.String `boil:"image_src" json:"image_src,omitempty" toml:"image_src" yaml:"image_src,omitempty"`
+	CreatedAt    time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt    time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *visualMemorySubtestR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L visualMemorySubtestL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -48,35 +39,17 @@ type VisualMemorySubtest struct {
 var VisualMemorySubtestColumns = struct {
 	ID           string
 	EvaluationID string
-	Shape        string
-	Pass         string
 	Score        string
-	Reasons      string
-	Iou          string
-	Circularity  string
-	AngleRmse    string
-	SideCV       string
-	CenterX      string
-	CenterY      string
-	BboxW        string
-	BboxH        string
+	Note         string
+	ImageSRC     string
 	CreatedAt    string
 	UpdatedAt    string
 }{
 	ID:           "id",
 	EvaluationID: "evaluation_id",
-	Shape:        "shape",
-	Pass:         "pass",
 	Score:        "score",
-	Reasons:      "reasons",
-	Iou:          "iou",
-	Circularity:  "circularity",
-	AngleRmse:    "angle_rmse",
-	SideCV:       "side_cv",
-	CenterX:      "center_x",
-	CenterY:      "center_y",
-	BboxW:        "bbox_w",
-	BboxH:        "bbox_h",
+	Note:         "note",
+	ImageSRC:     "image_src",
 	CreatedAt:    "created_at",
 	UpdatedAt:    "updated_at",
 }
@@ -84,151 +57,39 @@ var VisualMemorySubtestColumns = struct {
 var VisualMemorySubtestTableColumns = struct {
 	ID           string
 	EvaluationID string
-	Shape        string
-	Pass         string
 	Score        string
-	Reasons      string
-	Iou          string
-	Circularity  string
-	AngleRmse    string
-	SideCV       string
-	CenterX      string
-	CenterY      string
-	BboxW        string
-	BboxH        string
+	Note         string
+	ImageSRC     string
 	CreatedAt    string
 	UpdatedAt    string
 }{
-	ID:           "visual_memory_subtest.id",
-	EvaluationID: "visual_memory_subtest.evaluation_id",
-	Shape:        "visual_memory_subtest.shape",
-	Pass:         "visual_memory_subtest.pass",
-	Score:        "visual_memory_subtest.score",
-	Reasons:      "visual_memory_subtest.reasons",
-	Iou:          "visual_memory_subtest.iou",
-	Circularity:  "visual_memory_subtest.circularity",
-	AngleRmse:    "visual_memory_subtest.angle_rmse",
-	SideCV:       "visual_memory_subtest.side_cv",
-	CenterX:      "visual_memory_subtest.center_x",
-	CenterY:      "visual_memory_subtest.center_y",
-	BboxW:        "visual_memory_subtest.bbox_w",
-	BboxH:        "visual_memory_subtest.bbox_h",
-	CreatedAt:    "visual_memory_subtest.created_at",
-	UpdatedAt:    "visual_memory_subtest.updated_at",
+	ID:           "visual_memory_subtests.id",
+	EvaluationID: "visual_memory_subtests.evaluation_id",
+	Score:        "visual_memory_subtests.score",
+	Note:         "visual_memory_subtests.note",
+	ImageSRC:     "visual_memory_subtests.image_src",
+	CreatedAt:    "visual_memory_subtests.created_at",
+	UpdatedAt:    "visual_memory_subtests.updated_at",
 }
 
 // Generated where
 
-type whereHelpernull_Float64 struct{ field string }
-
-func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_Float64) IN(slice []float64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_Float64) NIN(slice []float64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
-type whereHelpernull_Int struct{ field string }
-
-func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-func (w whereHelpernull_Int) IN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelpernull_Int) NIN(slice []int) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
-func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
 var VisualMemorySubtestWhere = struct {
 	ID           whereHelperstring
 	EvaluationID whereHelperstring
-	Shape        whereHelperstring
-	Pass         whereHelperbool
-	Score        whereHelperfloat64
-	Reasons      whereHelperstring
-	Iou          whereHelpernull_Float64
-	Circularity  whereHelpernull_Float64
-	AngleRmse    whereHelpernull_Float64
-	SideCV       whereHelpernull_Float64
-	CenterX      whereHelpernull_Int
-	CenterY      whereHelpernull_Int
-	BboxW        whereHelpernull_Int
-	BboxH        whereHelpernull_Int
+	Score        whereHelperint
+	Note         whereHelperstring
+	ImageSRC     whereHelpernull_String
 	CreatedAt    whereHelpertime_Time
 	UpdatedAt    whereHelpertime_Time
 }{
-	ID:           whereHelperstring{field: "`visual_memory_subtest`.`id`"},
-	EvaluationID: whereHelperstring{field: "`visual_memory_subtest`.`evaluation_id`"},
-	Shape:        whereHelperstring{field: "`visual_memory_subtest`.`shape`"},
-	Pass:         whereHelperbool{field: "`visual_memory_subtest`.`pass`"},
-	Score:        whereHelperfloat64{field: "`visual_memory_subtest`.`score`"},
-	Reasons:      whereHelperstring{field: "`visual_memory_subtest`.`reasons`"},
-	Iou:          whereHelpernull_Float64{field: "`visual_memory_subtest`.`iou`"},
-	Circularity:  whereHelpernull_Float64{field: "`visual_memory_subtest`.`circularity`"},
-	AngleRmse:    whereHelpernull_Float64{field: "`visual_memory_subtest`.`angle_rmse`"},
-	SideCV:       whereHelpernull_Float64{field: "`visual_memory_subtest`.`side_cv`"},
-	CenterX:      whereHelpernull_Int{field: "`visual_memory_subtest`.`center_x`"},
-	CenterY:      whereHelpernull_Int{field: "`visual_memory_subtest`.`center_y`"},
-	BboxW:        whereHelpernull_Int{field: "`visual_memory_subtest`.`bbox_w`"},
-	BboxH:        whereHelpernull_Int{field: "`visual_memory_subtest`.`bbox_h`"},
-	CreatedAt:    whereHelpertime_Time{field: "`visual_memory_subtest`.`created_at`"},
-	UpdatedAt:    whereHelpertime_Time{field: "`visual_memory_subtest`.`updated_at`"},
+	ID:           whereHelperstring{field: "`visual_memory_subtests`.`id`"},
+	EvaluationID: whereHelperstring{field: "`visual_memory_subtests`.`evaluation_id`"},
+	Score:        whereHelperint{field: "`visual_memory_subtests`.`score`"},
+	Note:         whereHelperstring{field: "`visual_memory_subtests`.`note`"},
+	ImageSRC:     whereHelpernull_String{field: "`visual_memory_subtests`.`image_src`"},
+	CreatedAt:    whereHelpertime_Time{field: "`visual_memory_subtests`.`created_at`"},
+	UpdatedAt:    whereHelpertime_Time{field: "`visual_memory_subtests`.`updated_at`"},
 }
 
 // VisualMemorySubtestRels is where relationship names are stored.
@@ -268,8 +129,8 @@ func (r *visualMemorySubtestR) GetEvaluation() *Evaluation {
 type visualMemorySubtestL struct{}
 
 var (
-	visualMemorySubtestAllColumns            = []string{"id", "evaluation_id", "shape", "pass", "score", "reasons", "iou", "circularity", "angle_rmse", "side_cv", "center_x", "center_y", "bbox_w", "bbox_h", "created_at", "updated_at"}
-	visualMemorySubtestColumnsWithoutDefault = []string{"id", "evaluation_id", "shape", "pass", "score", "reasons", "iou", "circularity", "angle_rmse", "side_cv", "center_x", "center_y", "bbox_w", "bbox_h"}
+	visualMemorySubtestAllColumns            = []string{"id", "evaluation_id", "score", "note", "image_src", "created_at", "updated_at"}
+	visualMemorySubtestColumnsWithoutDefault = []string{"id", "evaluation_id", "score", "note", "image_src"}
 	visualMemorySubtestColumnsWithDefault    = []string{"created_at", "updated_at"}
 	visualMemorySubtestPrimaryKeyColumns     = []string{"id"}
 	visualMemorySubtestGeneratedColumns      = []string{}
@@ -519,7 +380,7 @@ func (q visualMemorySubtestQuery) One(ctx context.Context, exec boil.ContextExec
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "dbmodels: failed to execute a one query for visual_memory_subtest")
+		return nil, errors.Wrap(err, "dbmodels: failed to execute a one query for visual_memory_subtests")
 	}
 
 	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
@@ -558,7 +419,7 @@ func (q visualMemorySubtestQuery) Count(ctx context.Context, exec boil.ContextEx
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: failed to count visual_memory_subtest rows")
+		return 0, errors.Wrap(err, "dbmodels: failed to count visual_memory_subtests rows")
 	}
 
 	return count, nil
@@ -574,7 +435,7 @@ func (q visualMemorySubtestQuery) Exists(ctx context.Context, exec boil.ContextE
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "dbmodels: failed to check if visual_memory_subtest exists")
+		return false, errors.Wrap(err, "dbmodels: failed to check if visual_memory_subtests exists")
 	}
 
 	return count > 0, nil
@@ -723,7 +584,7 @@ func (o *VisualMemorySubtest) SetEvaluation(ctx context.Context, exec boil.Conte
 	}
 
 	updateQuery := fmt.Sprintf(
-		"UPDATE `visual_memory_subtest` SET %s WHERE %s",
+		"UPDATE `visual_memory_subtests` SET %s WHERE %s",
 		strmangle.SetParamNames("`", "`", 0, []string{"evaluation_id"}),
 		strmangle.WhereClause("`", "`", 0, visualMemorySubtestPrimaryKeyColumns),
 	)
@@ -760,10 +621,10 @@ func (o *VisualMemorySubtest) SetEvaluation(ctx context.Context, exec boil.Conte
 
 // VisualMemorySubtests retrieves all the records using an executor.
 func VisualMemorySubtests(mods ...qm.QueryMod) visualMemorySubtestQuery {
-	mods = append(mods, qm.From("`visual_memory_subtest`"))
+	mods = append(mods, qm.From("`visual_memory_subtests`"))
 	q := NewQuery(mods...)
 	if len(queries.GetSelect(q)) == 0 {
-		queries.SetSelect(q, []string{"`visual_memory_subtest`.*"})
+		queries.SetSelect(q, []string{"`visual_memory_subtests`.*"})
 	}
 
 	return visualMemorySubtestQuery{q}
@@ -779,7 +640,7 @@ func FindVisualMemorySubtest(ctx context.Context, exec boil.ContextExecutor, iD 
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from `visual_memory_subtest` where `id`=?", sel,
+		"select %s from `visual_memory_subtests` where `id`=?", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -789,7 +650,7 @@ func FindVisualMemorySubtest(ctx context.Context, exec boil.ContextExecutor, iD 
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "dbmodels: unable to select from visual_memory_subtest")
+		return nil, errors.Wrap(err, "dbmodels: unable to select from visual_memory_subtests")
 	}
 
 	if err = visualMemorySubtestObj.doAfterSelectHooks(ctx, exec); err != nil {
@@ -803,7 +664,7 @@ func FindVisualMemorySubtest(ctx context.Context, exec boil.ContextExecutor, iD 
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
 func (o *VisualMemorySubtest) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if o == nil {
-		return errors.New("dbmodels: no visual_memory_subtest provided for insertion")
+		return errors.New("dbmodels: no visual_memory_subtests provided for insertion")
 	}
 
 	var err error
@@ -846,15 +707,15 @@ func (o *VisualMemorySubtest) Insert(ctx context.Context, exec boil.ContextExecu
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO `visual_memory_subtest` (`%s`) %%sVALUES (%s)%%s", strings.Join(wl, "`,`"), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO `visual_memory_subtests` (`%s`) %%sVALUES (%s)%%s", strings.Join(wl, "`,`"), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO `visual_memory_subtest` () VALUES ()%s%s"
+			cache.query = "INSERT INTO `visual_memory_subtests` () VALUES ()%s%s"
 		}
 
 		var queryOutput, queryReturning string
 
 		if len(cache.retMapping) != 0 {
-			cache.retQuery = fmt.Sprintf("SELECT `%s` FROM `visual_memory_subtest` WHERE %s", strings.Join(returnColumns, "`,`"), strmangle.WhereClause("`", "`", 0, visualMemorySubtestPrimaryKeyColumns))
+			cache.retQuery = fmt.Sprintf("SELECT `%s` FROM `visual_memory_subtests` WHERE %s", strings.Join(returnColumns, "`,`"), strmangle.WhereClause("`", "`", 0, visualMemorySubtestPrimaryKeyColumns))
 		}
 
 		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
@@ -871,7 +732,7 @@ func (o *VisualMemorySubtest) Insert(ctx context.Context, exec boil.ContextExecu
 	_, err = exec.ExecContext(ctx, cache.query, vals...)
 
 	if err != nil {
-		return errors.Wrap(err, "dbmodels: unable to insert into visual_memory_subtest")
+		return errors.Wrap(err, "dbmodels: unable to insert into visual_memory_subtests")
 	}
 
 	var identifierCols []interface{}
@@ -891,7 +752,7 @@ func (o *VisualMemorySubtest) Insert(ctx context.Context, exec boil.ContextExecu
 	}
 	err = exec.QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	if err != nil {
-		return errors.Wrap(err, "dbmodels: unable to populate default values for visual_memory_subtest")
+		return errors.Wrap(err, "dbmodels: unable to populate default values for visual_memory_subtests")
 	}
 
 CacheNoHooks:
@@ -933,10 +794,10 @@ func (o *VisualMemorySubtest) Update(ctx context.Context, exec boil.ContextExecu
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("dbmodels: unable to update visual_memory_subtest, could not build whitelist")
+			return 0, errors.New("dbmodels: unable to update visual_memory_subtests, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE `visual_memory_subtest` SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE `visual_memory_subtests` SET %s WHERE %s",
 			strmangle.SetParamNames("`", "`", 0, wl),
 			strmangle.WhereClause("`", "`", 0, visualMemorySubtestPrimaryKeyColumns),
 		)
@@ -956,12 +817,12 @@ func (o *VisualMemorySubtest) Update(ctx context.Context, exec boil.ContextExecu
 	var result sql.Result
 	result, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: unable to update visual_memory_subtest row")
+		return 0, errors.Wrap(err, "dbmodels: unable to update visual_memory_subtests row")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by update for visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by update for visual_memory_subtests")
 	}
 
 	if !cached {
@@ -979,12 +840,12 @@ func (q visualMemorySubtestQuery) UpdateAll(ctx context.Context, exec boil.Conte
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: unable to update all for visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: unable to update all for visual_memory_subtests")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: unable to retrieve rows affected for visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: unable to retrieve rows affected for visual_memory_subtests")
 	}
 
 	return rowsAff, nil
@@ -1017,7 +878,7 @@ func (o VisualMemorySubtestSlice) UpdateAll(ctx context.Context, exec boil.Conte
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE `visual_memory_subtest` SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE `visual_memory_subtests` SET %s WHERE %s",
 		strmangle.SetParamNames("`", "`", 0, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, visualMemorySubtestPrimaryKeyColumns, len(o)))
 
@@ -1046,7 +907,7 @@ var mySQLVisualMemorySubtestUniqueColumns = []string{
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
 func (o *VisualMemorySubtest) Upsert(ctx context.Context, exec boil.ContextExecutor, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
-		return errors.New("dbmodels: no visual_memory_subtest provided for upsert")
+		return errors.New("dbmodels: no visual_memory_subtests provided for upsert")
 	}
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
@@ -1110,14 +971,14 @@ func (o *VisualMemorySubtest) Upsert(ctx context.Context, exec boil.ContextExecu
 		)
 
 		if !updateColumns.IsNone() && len(update) == 0 {
-			return errors.New("dbmodels: unable to upsert visual_memory_subtest, could not build update column list")
+			return errors.New("dbmodels: unable to upsert visual_memory_subtests, could not build update column list")
 		}
 
 		ret := strmangle.SetComplement(visualMemorySubtestAllColumns, strmangle.SetIntersect(insert, update))
 
-		cache.query = buildUpsertQueryMySQL(dialect, "`visual_memory_subtest`", update, insert)
+		cache.query = buildUpsertQueryMySQL(dialect, "`visual_memory_subtests`", update, insert)
 		cache.retQuery = fmt.Sprintf(
-			"SELECT %s FROM `visual_memory_subtest` WHERE %s",
+			"SELECT %s FROM `visual_memory_subtests` WHERE %s",
 			strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, ret), ","),
 			strmangle.WhereClause("`", "`", 0, nzUniques),
 		)
@@ -1149,7 +1010,7 @@ func (o *VisualMemorySubtest) Upsert(ctx context.Context, exec boil.ContextExecu
 	_, err = exec.ExecContext(ctx, cache.query, vals...)
 
 	if err != nil {
-		return errors.Wrap(err, "dbmodels: unable to upsert for visual_memory_subtest")
+		return errors.Wrap(err, "dbmodels: unable to upsert for visual_memory_subtests")
 	}
 
 	var uniqueMap []uint64
@@ -1161,7 +1022,7 @@ func (o *VisualMemorySubtest) Upsert(ctx context.Context, exec boil.ContextExecu
 
 	uniqueMap, err = queries.BindMapping(visualMemorySubtestType, visualMemorySubtestMapping, nzUniques)
 	if err != nil {
-		return errors.Wrap(err, "dbmodels: unable to retrieve unique values for visual_memory_subtest")
+		return errors.Wrap(err, "dbmodels: unable to retrieve unique values for visual_memory_subtests")
 	}
 	nzUniqueCols = queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), uniqueMap)
 
@@ -1172,7 +1033,7 @@ func (o *VisualMemorySubtest) Upsert(ctx context.Context, exec boil.ContextExecu
 	}
 	err = exec.QueryRowContext(ctx, cache.retQuery, nzUniqueCols...).Scan(returns...)
 	if err != nil {
-		return errors.Wrap(err, "dbmodels: unable to populate default values for visual_memory_subtest")
+		return errors.Wrap(err, "dbmodels: unable to populate default values for visual_memory_subtests")
 	}
 
 CacheNoHooks:
@@ -1197,7 +1058,7 @@ func (o *VisualMemorySubtest) Delete(ctx context.Context, exec boil.ContextExecu
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), visualMemorySubtestPrimaryKeyMapping)
-	sql := "DELETE FROM `visual_memory_subtest` WHERE `id`=?"
+	sql := "DELETE FROM `visual_memory_subtests` WHERE `id`=?"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1206,12 +1067,12 @@ func (o *VisualMemorySubtest) Delete(ctx context.Context, exec boil.ContextExecu
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: unable to delete from visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: unable to delete from visual_memory_subtests")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by delete for visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by delete for visual_memory_subtests")
 	}
 
 	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
@@ -1231,12 +1092,12 @@ func (q visualMemorySubtestQuery) DeleteAll(ctx context.Context, exec boil.Conte
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: unable to delete all from visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: unable to delete all from visual_memory_subtests")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by deleteall for visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by deleteall for visual_memory_subtests")
 	}
 
 	return rowsAff, nil
@@ -1262,7 +1123,7 @@ func (o VisualMemorySubtestSlice) DeleteAll(ctx context.Context, exec boil.Conte
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM `visual_memory_subtest` WHERE " +
+	sql := "DELETE FROM `visual_memory_subtests` WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, visualMemorySubtestPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
@@ -1277,7 +1138,7 @@ func (o VisualMemorySubtestSlice) DeleteAll(ctx context.Context, exec boil.Conte
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by deleteall for visual_memory_subtest")
+		return 0, errors.Wrap(err, "dbmodels: failed to get rows affected by deleteall for visual_memory_subtests")
 	}
 
 	if len(visualMemorySubtestAfterDeleteHooks) != 0 {
@@ -1317,7 +1178,7 @@ func (o *VisualMemorySubtestSlice) ReloadAll(ctx context.Context, exec boil.Cont
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT `visual_memory_subtest`.* FROM `visual_memory_subtest` WHERE " +
+	sql := "SELECT `visual_memory_subtests`.* FROM `visual_memory_subtests` WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, visualMemorySubtestPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
@@ -1335,7 +1196,7 @@ func (o *VisualMemorySubtestSlice) ReloadAll(ctx context.Context, exec boil.Cont
 // VisualMemorySubtestExists checks if the VisualMemorySubtest row exists.
 func VisualMemorySubtestExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from `visual_memory_subtest` where `id`=? limit 1)"
+	sql := "select exists(select 1 from `visual_memory_subtests` where `id`=? limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1346,7 +1207,7 @@ func VisualMemorySubtestExists(ctx context.Context, exec boil.ContextExecutor, i
 
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, errors.Wrap(err, "dbmodels: unable to check if visual_memory_subtest exists")
+		return false, errors.Wrap(err, "dbmodels: unable to check if visual_memory_subtests exists")
 	}
 
 	return exists, nil

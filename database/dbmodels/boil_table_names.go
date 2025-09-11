@@ -4,21 +4,21 @@
 package dbmodels
 
 var TableNames = struct {
-	ClockDrawSubtestResults     string
 	Evaluations                 string
 	ExecutiveFunctionsSubtests  string
 	LanguageFluencies           string
 	LettersCancellationSubtests string
 	Users                       string
 	VerbalMemorySubtests        string
-	VisualMemorySubtest         string
+	VisualMemorySubtests        string
+	VisualSpatialSubtest        string
 }{
-	ClockDrawSubtestResults:     "clock_draw_subtest_results",
 	Evaluations:                 "evaluations",
 	ExecutiveFunctionsSubtests:  "executive_functions_subtests",
 	LanguageFluencies:           "language_fluencies",
 	LettersCancellationSubtests: "letters_cancellation_subtests",
 	Users:                       "users",
 	VerbalMemorySubtests:        "verbal_memory_subtests",
-	VisualMemorySubtest:         "visual_memory_subtest",
+	VisualMemorySubtests:        "visual_memory_subtests",
+	VisualSpatialSubtest:        "visual_spatial_subtest",
 }

@@ -1,6 +1,6 @@
 module neuro.app.jordi
 
-go 1.23
+go 1.24
 
 require (
 	github.com/aarondl/null/v8 v8.1.3
@@ -19,7 +19,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/sashabaranov/go-openai v1.40.5
-	gocv.io/x/gocv v0.42.0
 	golang.org/x/time v0.12.0
 )
 

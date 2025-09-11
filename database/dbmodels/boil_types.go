@@ -69,18 +69,3 @@ func AllEvaluationsCurrentStatus() []string {
 		EvaluationsCurrentStatusFAILED,
 	}
 }
-
-// Enum values for VisualMemorySubtestShape
-const (
-	VisualMemorySubtestShapeCircle   string = "circle"
-	VisualMemorySubtestShapeSquare   string = "square"
-	VisualMemorySubtestShapeTriangle string = "triangle"
-)
-
-func AllVisualMemorySubtestShape() []string {
-	return []string{
-		VisualMemorySubtestShapeCircle,
-		VisualMemorySubtestShapeSquare,
-		VisualMemorySubtestShapeTriangle,
-	}
-}

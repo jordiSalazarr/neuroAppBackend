@@ -41,11 +41,11 @@ type Evaluation struct {
 	CreatedAt                 time.Time               `json:"createdAt"`
 	CurrentStatus             EvaluationCurrentStatus `json:"currentStatus"`
 	LetterCancellationSubTest LCdomain.LettersCancellationSubtest
-	VisualMemorySubTest       VIMdomain.GeoFigureSubtest
+	VisualMemorySubTest       VIMdomain.VisualMemorySubtest
 	VerbalmemorySubTest       VEMdomain.VerbalMemorySubtest
-	ExecutiveFunctionSubTest  EFdomain.ExecutiveFunctionsSubtest
+	ExecutiveFunctionSubTest  []EFdomain.ExecutiveFunctionsSubtest
 	LanguageFluencySubTest    LFdomain.LanguageFluency
-	VisualSpatialSubTest      VPdomain.ClockDrawResult
+	VisualSpatialSubTest      VPdomain.VisualSpatialSubtest
 }
 
 func newPatientName(name string) (string, error) {

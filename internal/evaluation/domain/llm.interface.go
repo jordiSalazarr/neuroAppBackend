@@ -9,12 +9,6 @@ import (
 
 type LLMService interface {
 	GenerateAnalysis(evaluation Evaluation) (string, error)
-	LettersCancellationAnalysis(subtest *LCdomain.LettersCancellationSubtest, patientAge int) (string, error)
-	VerbalMemoryAnalysis(subtest *VEMdomain.VerbalMemorySubtest, patientAge int) (string, error)
-
-	ExecutiveFunctionsAnalysis(subtest *EFdomain.ExecutiveFunctionsSubtest, patientAge int) (string, error)
-
-	LanguageFluencyAnalysis(subtest *LFdomain.LanguageFluency, patientAge int) (string, error)
 }
 
 type MockInterface struct{}
