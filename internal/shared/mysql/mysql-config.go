@@ -36,7 +36,7 @@ func NewMySQL() (*sql.DB, error) {
 		)
 
 	} else {
-		dsn = os.Getenv("DB_URL")
+		dsn = os.Getenv("DB_RAILWAY_URL")
 	}
 	if dsn == "" {
 		dsn = "root:yNtWxjtZKbXPabacQnonPFNFREkAaHGY@tcp(mysql.railway.internal:3306)/railway?parseTime=true&charset=utf8mb4&loc=Local"
