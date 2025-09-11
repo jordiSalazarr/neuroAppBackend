@@ -27,7 +27,7 @@ func runMigrations(db *sql.DB) {
 func NewMySQL() (*sql.DB, error) {
 	// _ = godotenv.Overload(".env.local", ".env") // prioridad a .env.local; luego .env
 	var dsn string
-	if os.Getenv("environment") == "local" {
+	if os.Getenv("ENVIRONMENT") == "local" {
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
 			os.Getenv("DB_USER"),
 			os.Getenv("DB_PASSWORD"),
@@ -39,7 +39,9 @@ func NewMySQL() (*sql.DB, error) {
 	} else {
 		dsn = os.Getenv("DB_URL")
 	}
-
+	if dsn == "" {
+		dsn = "root:YCzHrBnDRkmnNjLFnfDkNgnfnhoTsdxm@tcp(mysql.railway.internal:3306)/railway?parseTime=true&charset=utf8mb4&loc=Local"
+	}
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
@@ -57,7 +59,7 @@ func NewMySQL() (*sql.DB, error) {
 	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
-	if os.Getenv("environment") != "local" {
+	if os.Getenv("ENVIRONMENT") != "local" {
 		runMigrations(db)
 	}
 	return db, nil
