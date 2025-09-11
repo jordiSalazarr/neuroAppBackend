@@ -10,8 +10,6 @@ import (
 
 	_ "github.com/go-sql-driver/mysql" // 👈 ESTE IMPORT REGISTRA EL DRIVER
 	migrate "github.com/rubenv/sql-migrate"
-
-	"github.com/joho/godotenv"
 )
 
 func runMigrations(db *sql.DB) {
@@ -27,7 +25,7 @@ func runMigrations(db *sql.DB) {
 }
 
 func NewMySQL() (*sql.DB, error) {
-	_ = godotenv.Overload(".env.local", ".env") // prioridad a .env.local; luego .env
+	// _ = godotenv.Overload(".env.local", ".env") // prioridad a .env.local; luego .env
 	var dsn string
 	if os.Getenv("environment") == "local" {
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
@@ -40,7 +38,6 @@ func NewMySQL() (*sql.DB, error) {
 
 	} else {
 		dsn = os.Getenv("DB_URL")
-
 	}
 
 	db, err := sql.Open("mysql", dsn)
