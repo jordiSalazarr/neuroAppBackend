@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-
-	"github.com/joho/godotenv"
 )
 
 const (
@@ -26,11 +24,11 @@ type AppConfig struct {
 }
 
 func GetConfig() *AppConfig {
-	err := godotenv.Load(".env.local")
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil
-	}
+	// err := godotenv.Load(".env.local")
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// 	return nil
+	// }
 	port, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
 	if err != nil {
 		fmt.Println("Error parsing SMTP_PORT:", err)
