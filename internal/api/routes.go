@@ -2,13 +2,11 @@ package api
 
 import (
 	"database/sql"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/time/rate"
 	authD "neuro.app.jordi/internal/auth/domain"
 	"neuro.app.jordi/internal/evaluation/domain"
 	services "neuro.app.jordi/internal/evaluation/services/openAI"
@@ -34,16 +32,16 @@ import (
 	"neuro.app.jordi/internal/shared/midleware"
 )
 
-var limiter = rate.NewLimiter(100, 5)
+// var limiter = rate.NewLimiter(100, 5)
 
-func rateLimiter(c *gin.Context) {
-	if !limiter.Allow() {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "too many requests"})
-		c.Abort()
-		return
-	}
-	c.Next()
-}
+// func rateLimiter(c *gin.Context) {
+// 	if !limiter.Allow() {
+// 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "too many requests"})
+// 		c.Abort()
+// 		return
+// 	}
+// 	c.Next()
+// }
 
 type App struct {
 	Repositories Repositories
@@ -118,7 +116,7 @@ func (app *App) SetupRouter() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	router.Use(rateLimiter, gin.Recovery())
+	// router.Use(rateLimiter, gin.Recovery())
 
 	// Grupo para endpoints relacionados con evaluaciones
 	evaluationGroup := router.Group("/v1/evaluations")
