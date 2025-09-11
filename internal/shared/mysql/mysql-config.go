@@ -4,19 +4,34 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql" // 👈 ESTE IMPORT REGISTRA EL DRIVER
+	migrate "github.com/rubenv/sql-migrate"
 
 	"github.com/joho/godotenv"
 )
+
+func runMigrations(db *sql.DB) {
+	migrations := &migrate.FileMigrationSource{
+		Dir: "migrations",
+	}
+
+	n, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
+	if err != nil {
+		log.Fatalf("Could not apply migrations: %v", err)
+	}
+	log.Printf("Applied %d migrations!\n", n)
+}
 
 func NewMySQL() (*sql.DB, error) {
 	_ = godotenv.Overload(".env.local", ".env") // prioridad a .env.local; luego .env
 	var dsn string
 	if os.Getenv("environment") != "local" {
 		dsn = os.Getenv("DB_URL")
+
 	} else {
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
 			os.Getenv("DB_USER"),
@@ -44,6 +59,8 @@ func NewMySQL() (*sql.DB, error) {
 	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
-
+	if os.Getenv("environment") != "local" {
+		runMigrations(db)
+	}
 	return db, nil
 }
