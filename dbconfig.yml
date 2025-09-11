@@ -4,11 +4,10 @@ development:
   dir: migrations
   table: migrations
 
-master:
+production:
   dialect: mysql
-  datasource: https://mysql-production-33dd.up.railway.app/
+  datasource: ${DATABASE_URL}
   dir: migrations
-  table: migrations
 
 develop:
   dialect: mysql
