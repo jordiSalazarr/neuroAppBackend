@@ -46,12 +46,10 @@ func main() {
 		Handler: router,
 	}
 
-	go func() {
-		log.Printf("Server listening on port: " + port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Listen error: %s\n", err)
-		}
-	}()
+	log.Printf("Server listening on port: " + port)
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Listen error: %s\n", err)
+	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
