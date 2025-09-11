@@ -34,7 +34,6 @@ func NewMySQL() (*sql.DB, error) {
 			os.Getenv("DB_PORT"),
 			os.Getenv("DB_NAME"),
 		)
-
 	} else {
 		dsn = os.Getenv("DB_RAILWAY_URL")
 	}
