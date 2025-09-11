@@ -110,25 +110,30 @@ func (app *App) SetupRouter() *gin.Engine {
 	r.SetTrustedProxies(nil)
 	r.Use(gin.Logger(), gin.Recovery())
 
-	r.Use(cors.New(cors.Config{
+	corsCfg := cors.Config{
 		AllowOrigins: []string{
 			"https://neuro-next-web-production.up.railway.app",
 			"http://localhost:3000",
 		},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"*"}, // ← preflights often send various headers
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		// ¡NO uses "*"! Enumera explícitamente lo que envías desde el front:
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Accept",
+			"Authorization",
+			"X-Requested-With",
+		},
 		ExposeHeaders:    []string{"Content-Length", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-	}))
+	}
+	r.Use(cors.New(corsCfg))
 
 	// Health BEFORE any services
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
-	// Answer ALL preflights
-	r.OPTIONS("/*path", func(c *gin.Context) { c.Status(http.StatusNoContent) })
-
 	// --- your groups below ---
 	eval := r.Group("/v1/evaluations")
 	{
