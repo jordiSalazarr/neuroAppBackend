@@ -47,7 +47,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("Server listening")
+		log.Printf("Server listening on port: " + port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Listen error: %s\n", err)
 		}
