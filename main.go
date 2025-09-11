@@ -38,7 +38,7 @@ func main() {
 	api := router.Group("/api")
 	{
 		api.GET("/ping", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "pong"})
+			c.JSON(http.StatusOK, gin.H{"message": "pongg"})
 		})
 	}
 	port := fmt.Sprintf(":%s", os.Getenv("PORT"))
