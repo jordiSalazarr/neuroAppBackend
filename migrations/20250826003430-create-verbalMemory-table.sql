@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE verbal_memory_subtests (
+CREATE TABLE if not exists verbal_memory_subtests (
   id                          CHAR(36)        NOT NULL,
   evaluation_id               CHAR(36)        NOT NULL,
   seconds_from_start          BIGINT          NOT NULL,

@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE evaluations (
+CREATE TABLE if not exists evaluations (
   id                CHAR(36) NOT NULL PRIMARY KEY, -- assuming UUID/char id from sqlboiler string
   patient_name      VARCHAR(255) NOT NULL,
   patient_age       INT NOT NULL,

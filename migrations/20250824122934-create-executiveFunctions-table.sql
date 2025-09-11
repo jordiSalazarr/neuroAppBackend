@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE executive_functions_subtests (
+CREATE TABLE if not exists executive_functions_subtests (
   id                CHAR(36) NOT NULL PRIMARY KEY,         -- PK (UUID from app)
   evaluation_id     CHAR(36) NOT NULL,                      -- FK to evaluations.id
   number_of_items   INT NOT NULL,

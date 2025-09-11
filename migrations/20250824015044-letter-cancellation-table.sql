@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE letters_cancellation_subtests (
+CREATE TABLE if not exists letters_cancellation_subtests (
     id                  CHAR(36) NOT NULL PRIMARY KEY, -- UUID del subtest
     evaluation_id       CHAR(36) NOT NULL,             -- FK a evaluations.id
     total_targets       INT NOT NULL,

@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE users (
+CREATE TABLE if not exists users (
     id          CHAR(36) NOT NULL PRIMARY KEY,      -- UUID generado en la app
     cognito_id  VARCHAR(255) NOT NULL UNIQUE,       -- sub de Cognito
     name        VARCHAR(255) NOT NULL,

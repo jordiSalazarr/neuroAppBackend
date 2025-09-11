@@ -1,5 +1,5 @@
 -- +migrate Up
-CREATE TABLE language_fluencies (
+CREATE TABLE if not exists language_fluencies (
   id                 CHAR(36) NOT NULL PRIMARY KEY,          -- PK (UUID from app)
   evaluation_id      CHAR(36) NOT NULL,                      -- FK to evaluations.id
   language           VARCHAR(64)  NOT NULL,
