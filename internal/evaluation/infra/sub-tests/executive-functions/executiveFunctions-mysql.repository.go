@@ -24,12 +24,12 @@ func NewExecutiveFunctionsSubtestMYSQLRepository(db *sql.DB) *Executivefunctions
 func domainToDBExecutiveFunctions(s EFdomain.ExecutiveFunctionsSubtest) *dbmodels.ExecutiveFunctionsSubtest {
 	return &dbmodels.ExecutiveFunctionsSubtest{
 		ID:                s.PK,
-		EvaluationID:      s.EvauluationId, // field has a typo in struct name, but tags say "evaluationId"
+		EvaluationID:      s.EvauluationId,
 		NumberOfItems:     s.NumberOfItems,
 		TotalClicks:       s.TotalClicks,
 		TotalErrors:       s.TotalErrors,
 		TotalCorrect:      s.TotalCorrect,
-		TotalTimeSec:      s.TotalTime.Seconds(), // time.Duration -> seconds
+		TotalTimeSec:      float64(s.Score.Score),
 		Type:              string(s.Type),
 		Score:             s.Score.Score,
 		Accuracy:          s.Score.Accuracy,
@@ -37,7 +37,7 @@ func domainToDBExecutiveFunctions(s EFdomain.ExecutiveFunctionsSubtest) *dbmodel
 		CommissionRate:    s.Score.CommissionRate,
 		DurationSec:       s.Score.DurationSec,
 		AssistantAnalysis: null.StringFrom(s.AssistanAnalys),
-		CreatedAt:         s.CreatedAt, // assuming non-nullable TIMESTAMP
+		CreatedAt:         s.CreatedAt,
 	}
 }
 

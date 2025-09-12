@@ -65,9 +65,11 @@ func NewExecutiveFunctionsSubtest(
 func (s ExecutiveFunctionsSubtest) DurationSeconds() float64 {
 	sec := s.TotalTime.Seconds()
 	if sec <= 0 {
-		return 1 // evita divisiones por 0 o valores negativos
+		sec = 1 // evita divisiones por 0 o valores negativos
 	}
-	return sec
+	// Penalización: cada error añade +10 segundos
+	penalty := float64(s.TotalErrors * 10)
+	return sec + penalty
 }
 
 func ScoreExecutiveFunctions(sub ExecutiveFunctionsSubtest) (ExecutiveFunctionsScore, error) {

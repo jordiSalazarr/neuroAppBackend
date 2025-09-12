@@ -79,8 +79,8 @@ DOMINIOS Y MÉTRICAS (resumen operativo)
    Déficit amnésico: ↓score/accuracy con ↑omissions; intrusions/perseverations sugieren fallo en control/monitorización.
 
 4) Funciones ejecutivas — ExecutiveFunctions (p.ej., TMT A/B)
-   Métricas: Score (0–100), Accuracy, SpeedIndex, CommissionRate, DurationSec.
-   Déficit ejecutivo/velocidad: ↓score/accuracy/speedIndex con ↑commissionRate/tiempos.
+   Métricas: Tiempo. Para el test primero A, se considera normal por debajo de 100 segundos, para 
+   el segundo 350 segundos. Te paso el tiempo en segundos ya.
 
 5) Fluencia verbal — LanguageFluency (p.ej., semántica)
    Métricas: Score (0–100), UniqueValid, Intrusions, Perseverations, WordsPerMinute, IntrusionRate, PersevRate.

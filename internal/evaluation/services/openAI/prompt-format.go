@@ -74,18 +74,13 @@ type LLMVerbalMemorySummary struct {
 }
 
 type LLMExecOnePart struct {
-	Present        bool    `json:"present"`
-	NumberItems    int     `json:"numberOfItems"`
-	Errors         int     `json:"totalErrors"`
-	Correct        int     `json:"totalCorrect"`
-	Clicks         int     `json:"totalClicks"`
-	DurationSec    float64 `json:"durationSec"` // del score o computado desde TotalTime
-	Score0to100    int     `json:"score_0_100"`
-	Accuracy       float64 `json:"accuracy"`
-	SpeedIndex     float64 `json:"speedIndex"`
-	CommissionRate float64 `json:"commissionRate"`
-	StartAtISO     string  `json:"startAt,omitempty"`
-	CreatedAtISO   string  `json:"createdAt,omitempty"`
+	Present     bool    `json:"present"`
+	NumberItems int     `json:"numberOfItems"`
+	Errors      int     `json:"totalErrors"`
+	Correct     int     `json:"totalCorrect"`
+	Clicks      int     `json:"totalClicks"`
+	DurationSec float64 `json:"durationSec"` // del score o computado desde TotalTime
+	SpeedIndex  float64 `json:"speedIndex"`
 }
 
 type LLMExecutiveSummary struct {
@@ -185,18 +180,13 @@ func buildExecutive(ev domain.Evaluation) LLMExecutiveSummary {
 	for _, part := range ev.ExecutiveFunctionSubTest {
 		t := strings.ToLower(fmt.Sprintf("%v", part.Type)) // soporta enum/string
 		one := LLMExecOnePart{
-			Present:        part.PK != "",
-			NumberItems:    part.NumberOfItems,
-			Errors:         part.TotalErrors,
-			Correct:        part.TotalCorrect,
-			Clicks:         part.TotalClicks,
-			DurationSec:    durationSec(part),
-			Score0to100:    part.Score.Score,
-			Accuracy:       part.Score.Accuracy,
-			SpeedIndex:     part.Score.SpeedIndex,
-			CommissionRate: part.Score.CommissionRate,
-			StartAtISO:     "", // rellénalo si lo guardas en el modelo
-			CreatedAtISO:   part.CreatedAt.Format(time.RFC3339),
+			Present:     part.PK != "",
+			NumberItems: part.NumberOfItems,
+			Errors:      part.TotalErrors,
+			Correct:     part.TotalCorrect,
+			Clicks:      part.TotalClicks,
+			DurationSec: durationSec(part),
+			SpeedIndex:  part.Score.SpeedIndex,
 		}
 
 		switch t {
