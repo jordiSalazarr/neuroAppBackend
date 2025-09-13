@@ -122,12 +122,13 @@ func (app *App) ListEvaluations(c *gin.Context) {
 
 	// 4) Construir query de dominio
 	query := listevaluations.ListEvaluationsQuery{
-		SpecialistID: dto.SpecialistID,
-		FromDate:     from, // zero => sin filtro si tu capa de aplicación lo permite
-		ToDate:       to,   // zero => sin filtro
-		SearchTerm:   dto.SearchTerm,
-		Offset:       offset,
-		Limit:        limit,
+		SpecialistID:  dto.SpecialistID,
+		FromDate:      from, // zero => sin filtro si tu capa de aplicación lo permite
+		ToDate:        to,   // zero => sin filtro
+		SearchTerm:    dto.SearchTerm,
+		Offset:        offset,
+		Limit:         limit,
+		OnlyCompleted: true,
 	}
 
 	// 5) Handler de aplicación

@@ -77,7 +77,7 @@ func (m *EvaluationsMYSQLRepository) GetByID(ctx context.Context, id string) (do
 
 }
 
-func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string) ([]*domain.Evaluation, error) {
+func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*domain.Evaluation, error) {
 
 	var query []qm.QueryMod
 	defaultLimit := 30
@@ -92,6 +92,9 @@ func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDa
 		qm.Offset(offset),
 		qm.Limit(limit),
 	)
+	if onlyCompleted {
+		query = append(query, dbmodels.EvaluationWhere.CurrentStatus.EQ(dbmodels.EvaluationsCurrentStatusCOMPLETED))
+	}
 	if searchTerm != "" {
 		query = append(
 			query, dbmodels.EvaluationWhere.PatientName.LIKE("%"+searchTerm+"%"),

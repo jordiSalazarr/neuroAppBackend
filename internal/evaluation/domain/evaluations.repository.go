@@ -12,7 +12,7 @@ type EvaluationsRepository interface {
 
 	Update(ctx context.Context, evaluation Evaluation) error
 
-	GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string) ([]*Evaluation, error)
+	GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*Evaluation, error)
 }
 
 type MockEvaluationsRepository struct {

@@ -43,7 +43,7 @@ type fakeEvalRepo struct {
 
 // Si quieres, también puedes añadir el assert de interfaz:
 // var _ domain.EvaluationsRepository = (*fakeEvalRepo)(nil)
-func (f *fakeEvalRepo) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string) ([]*domain.Evaluation, error) {
+func (f *fakeEvalRepo) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*domain.Evaluation, error) {
 	return nil, nil
 }
 func (f *fakeEvalRepo) GetByID(ctx context.Context, id string) (domain.Evaluation, error) {

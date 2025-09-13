@@ -28,7 +28,7 @@ type fakeEvalRepo struct {
 
 var _ domain.EvaluationsRepository = (*fakeEvalRepo)(nil)
 
-func (f *fakeEvalRepo) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string) ([]*domain.Evaluation, error) {
+func (f *fakeEvalRepo) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*domain.Evaluation, error) {
 	return nil, nil
 }
 func (f *fakeEvalRepo) Update(ctx context.Context, e domain.Evaluation) error {

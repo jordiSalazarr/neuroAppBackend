@@ -120,7 +120,8 @@ TAREA
 ENTRADA (JSON ANÓNIMO):
 %s
 
-FORMATO DE SALIDA (español, tono clínico y profesional)
+FORMATO DE SALIDA (español, tono clínico y profesional) y sobretodo en formato MArkdown muy bien estructurado, quiero titulo y subtitulos en negrita
+siempre.
 ### Perfil predominante
 [tu elección + justificación breve]
 
