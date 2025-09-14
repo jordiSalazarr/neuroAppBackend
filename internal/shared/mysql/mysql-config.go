@@ -9,6 +9,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql" // 👈 ESTE IMPORT REGISTRA EL DRIVER
+	"github.com/joho/godotenv"
 	migrate "github.com/rubenv/sql-migrate"
 )
 
@@ -25,26 +26,22 @@ func runMigrations(db *sql.DB) {
 }
 
 func NewMySQL() (*sql.DB, error) {
-	var dsn string
-	if os.Getenv("ENVIRONMENT") == "local" {
-		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
-			os.Getenv("DB_USER"),
-			os.Getenv("DB_PASSWORD"),
-			os.Getenv("DB_HOST"),
-			os.Getenv("DB_PORT"),
-			os.Getenv("DB_NAME"),
-		)
-	} else {
-		dsn = os.Getenv("DB_RAILWAY_URL")
+	env := os.Getenv("ENVIRONMENT")
+	if env == "" { //this should only happen in local development
+		env = "local"
 	}
-	if dsn == "" {
-		dsn = "root:yNtWxjtZKbXPabacQnonPFNFREkAaHGY@tcp(mysql.railway.internal:3306)/railway?parseTime=true&charset=utf8mb4&loc=Local"
+	var db *sql.DB
+	var err error
+	if env == "local" {
+		db, err = getLocalDB()
+
 	}
-	db, err := sql.Open("mysql", dsn)
+	if env == "prod" {
+		db, err = getProdDB()
+	}
 	if err != nil {
 		return nil, err
 	}
-
 	// Buenas prácticas de pool
 	db.SetMaxOpenConns(20)                  // máximo de conexiones abiertas
 	db.SetMaxIdleConns(10)                  // máximo en idle
@@ -59,6 +56,35 @@ func NewMySQL() (*sql.DB, error) {
 	}
 	if os.Getenv("ENVIRONMENT") != "local" {
 		runMigrations(db)
+	}
+	return db, nil
+}
+
+func getLocalDB() (*sql.DB, error) {
+	err := godotenv.Load(".env.local")
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+func getProdDB() (*sql.DB, error) {
+	dsn := os.Getenv("DB_RAILWAY_URL")
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
 	}
 	return db, nil
 }

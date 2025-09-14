@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -24,11 +26,15 @@ type AppConfig struct {
 }
 
 func GetConfig() *AppConfig {
-	// err := godotenv.Load(".env.local")
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	return nil
-	// }
+	env := os.Getenv("ENVIRONMENT")
+	if env == "" { //this should only happen in local development
+		env = "local"
+		err := godotenv.Load(".env.local")
+		if err != nil {
+			fmt.Println(err.Error())
+			return nil
+		}
+	}
 	port, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
 	if err != nil {
 		fmt.Println("Error parsing SMTP_PORT:", err)
@@ -66,24 +72,3 @@ func GetCurrentEnvironment() string {
 	}
 	return EnvLocal
 }
-
-// func GetProdConfig() AppConfig {
-// 	return AppConfig{
-// 		//Logger: , TODO: implementLogger
-// 		OpenAIKey: os.Getenv("OPENAI_API_KEY"),
-// 	}
-// }
-
-// func GetDevConfig() AppConfig {
-// 	return AppConfig{
-// 		//Logger: , TODO: implementLogger
-// 		OpenAIKey: os.Getenv("OPENAI_API_KEY"),
-// 	}
-// }
-
-// func GetTestConfig() AppConfig {
-// 	return AppConfig{
-// 		//Logger: , TODO: implementLogger
-// 		OpenAIKey: os.Getenv("OPENAI_API_KEY"),
-// 	}
-// }
