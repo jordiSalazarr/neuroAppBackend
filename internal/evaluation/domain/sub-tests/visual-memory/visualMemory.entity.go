@@ -44,6 +44,9 @@ func newVisualMemoryNote(note string) (*VisualMemoryNote, error) {
 	}, nil
 }
 func NewVisualMemorySubtest(evaluationId string, imageSrc *string, scoreIn int, noteIn string) (VisualMemorySubtest, error) {
+	if evaluationId == "" {
+		return VisualMemorySubtest{}, errors.New("evaluationId is required")
+	}
 	score, err := newVisualMemoryScore(scoreIn)
 	if err != nil {
 		return VisualMemorySubtest{}, err

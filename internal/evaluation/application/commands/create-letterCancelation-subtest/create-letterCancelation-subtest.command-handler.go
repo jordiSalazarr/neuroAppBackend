@@ -8,6 +8,7 @@ import (
 )
 
 func CreateLetterCancellationSubtestCommandHandler(ctx context.Context, command CreateLetterCancellationSubtestCommand, letterCancellationRepo LCdomain.LetterCancellationRepository, evaluationsRepo domain.EvaluationsRepository, llmService domain.LLMService) (*LCdomain.LettersCancellationSubtest, error) {
+
 	cfg := &LCdomain.CancellationScoreConfig{
 		CapErrorFactor: 2.0,
 	}

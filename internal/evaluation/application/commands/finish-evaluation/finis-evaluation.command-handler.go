@@ -2,6 +2,7 @@ package finishevaluation
 
 import (
 	"context"
+	"errors"
 
 	"neuro.app.jordi/internal/evaluation/application/services"
 	"neuro.app.jordi/internal/evaluation/domain"
@@ -21,6 +22,9 @@ func FinisEvaluationCommanndHandler(
 	evaluationPublisher reports.Publisher, verbalMemoryRepository VEMdomain.VerbalMemoryRepository,
 	visualMemoryRepository VIMdomain.VisualMemoryRepository, executiveFunctionsRepository EFdomain.ExecutiveFunctionsSubtestRepository,
 	letterCancellationRepository LCdomain.LetterCancellationRepository, languageFluencyRepository LFdomain.LanguageFluencyRepository, visualSpatialRepository VPdomain.ResultRepository) (domain.Evaluation, error) {
+	if command.EvaluationID == "" {
+		return domain.Evaluation{}, errors.New("evaluation ID is required")
+	}
 	evaluation, err := evaluationRepository.GetByID(ctx, command.EvaluationID)
 	if err != nil {
 		return domain.Evaluation{}, err
@@ -39,7 +43,7 @@ func FinisEvaluationCommanndHandler(
 	evaluation.CurrentStatus = domain.EvaluationCurrentStatusCompleted
 
 	if err = evaluationRepository.Update(ctx, evaluation); err != nil {
-		return domain.Evaluation{}, nil
+		return domain.Evaluation{}, err
 	}
 	return evaluation, err
 

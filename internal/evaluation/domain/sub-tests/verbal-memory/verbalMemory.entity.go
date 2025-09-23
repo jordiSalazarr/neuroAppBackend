@@ -45,6 +45,9 @@ type VerbalMemoryScore struct {
 }
 
 func NewVerbalMemorySubtest(evaluationID string, startAt time.Time, givenWords, recalledWords []string) (VerbalMemorySubtest, error) {
+	if evaluationID == "" {
+		return VerbalMemorySubtest{}, errors.New("evaluationID es obligatorio")
+	}
 	timeSinceStart := time.Since(startAt).Seconds()
 	if timeSinceStart < 0 || timeSinceStart > MaxTimeSinceStart {
 		return VerbalMemorySubtest{}, errors.New("startAt no puede ser en el futuro o más de 1 hora en el pasado")
