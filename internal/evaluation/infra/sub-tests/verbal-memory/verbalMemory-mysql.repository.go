@@ -16,10 +16,57 @@ type VerbalMemoryMYSQLRepository struct {
 	Exec boil.ContextExecutor
 }
 
+type MockVerbalMemoryRepository struct{}
+
+var MockVerbalMemorySubtests []*VEMdomain.VerbalMemorySubtest = []*VEMdomain.VerbalMemorySubtest{
+	{
+		Pk:               "subtest1",
+		EvaluationID:     "eval1",
+		SecondsFromStart: 30,
+		GivenWords:       []string{"apple", "banana", "cherry"},
+		RecalledWords:    []string{"apple", "cherry"},
+		Type:             VEMdomain.VerbalMemorySubtypeImmediate,
+		Score: VEMdomain.VerbalMemoryScore{
+			Score:             66,
+			Hits:              2,
+			Omissions:         1,
+			Intrusions:        0,
+			Perseverations:    0,
+			Accuracy:          0.67,
+			IntrusionRate:     0.0,
+			PerseverationRate: 0.0,
+		},
+		AssistanAnalysis: "Good recall ability.",
+	},
+	{
+		Pk:               "subtest2",
+		EvaluationID:     "eval2",
+		SecondsFromStart: 30,
+		GivenWords:       []string{"dog", "cat", "mouse"},
+		RecalledWords:    []string{"dog", "cat", "elephant"},
+		Type:             VEMdomain.VerbalMemorySubtypeImmediate,
+		Score: VEMdomain.VerbalMemoryScore{
+			Score:             66,
+			Hits:              2,
+			Omissions:         1,
+			Intrusions:        1,
+			Perseverations:    0,
+			Accuracy:          0.67,
+			IntrusionRate:     0.33,
+			PerseverationRate: 0.0,
+		},
+		AssistanAnalysis: "Average recall with some intrusions.",
+	},
+}
+
 func NewVerbalMemoryMYSQLRepository(db *sql.DB) *VerbalMemoryMYSQLRepository {
 	return &VerbalMemoryMYSQLRepository{
 		Exec: db,
 	}
+}
+
+func NewMockVerbalMemoryRepository() MockVerbalMemoryRepository {
+	return MockVerbalMemoryRepository{}
 }
 
 func DBToDomainVerbalMemory(m *dbmodels.VerbalMemorySubtest) (VEMdomain.VerbalMemorySubtest, error) {
@@ -116,4 +163,16 @@ func (r VerbalMemoryMYSQLRepository) GetByEvaluationID(ctx context.Context, id s
 	}
 
 	return DBToDomainVerbalMemory(dbVerbalMemorySubtest)
+}
+
+func (r MockVerbalMemoryRepository) Save(ctx context.Context, subtest VEMdomain.VerbalMemorySubtest) error {
+	return nil
+}
+
+func (r MockVerbalMemoryRepository) GetByID(ctx context.Context, id string) (VEMdomain.VerbalMemorySubtest, error) {
+	return *MockVerbalMemorySubtests[0], nil
+}
+
+func (r MockVerbalMemoryRepository) GetByEvaluationID(ctx context.Context, id string) (VEMdomain.VerbalMemorySubtest, error) {
+	return *MockVerbalMemorySubtests[0], nil
 }

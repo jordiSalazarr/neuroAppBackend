@@ -16,6 +16,13 @@ type UsersMYSQLRepository struct {
 
 }
 
+type MockUsersRepository struct{}
+
+// NewMockUsersRepository crea una nueva instancia de MockUsersRepository
+func NewMockUsersRepository() *MockUsersRepository {
+	return &MockUsersRepository{}
+}
+
 // NewUsersMYSQLRepository crea una nueva instancia de UsersMYSQLRepository
 func NewUseMYSQLRepository(db *sql.DB) *UsersMYSQLRepository {
 	return &UsersMYSQLRepository{Exec: db}
@@ -103,4 +110,35 @@ func (repo *UsersMYSQLRepository) Update(ctx context.Context, user domain.User) 
 	dbUser := userToDBModel(user)
 	_, err := dbUser.Update(ctx, repo.Exec, boil.Infer())
 	return err
+}
+
+func (repo *MockUsersRepository) GetUserById(ctx context.Context, id string) (domain.User, error) {
+	return domain.User{}, nil
+
+}
+
+// GetUserByMail obtiene un usuario por su correo electrónico
+func (repo *MockUsersRepository) GetUserByMail(ctx context.Context, mail string) (domain.User, error) {
+	return domain.User{}, nil
+
+}
+
+// Insert inserta un nuevo usuario
+func (repo *MockUsersRepository) Insert(ctx context.Context, user domain.User) error {
+	return nil
+}
+
+// Delete elimina un usuario por su ID
+func (repo *MockUsersRepository) Delete(ctx context.Context, id string) error {
+	return nil
+}
+
+// Exists verifica si un usuario existe por su correo electrónico
+func (repo *MockUsersRepository) Exists(ctx context.Context, mail string) bool {
+	return true
+}
+
+// Update actualiza un usuario existente
+func (repo *MockUsersRepository) Update(ctx context.Context, user domain.User) error {
+	return nil
 }

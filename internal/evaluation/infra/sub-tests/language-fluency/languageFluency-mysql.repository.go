@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 
 	"github.com/aarondl/null/v8"
 	"github.com/aarondl/sqlboiler/types"
@@ -16,10 +17,39 @@ type LanguageFluencyMYSQLRepository struct {
 	Exec boil.ContextExecutor
 }
 
+type MockLanguageFluencyRepository struct{}
+
+var MockLanguageFluencySubtests []*LFdomain.LanguageFluency = []*LFdomain.LanguageFluency{
+	{
+		PK:           "subtest1",
+		EvaluationID: "eval1",
+		Language:     "English",
+		Proficiency:  "Fluent",
+		Category:     "Speaking",
+		AnswerWords:  []string{"hello", "world"},
+		Score: LFdomain.LanguageFluencyScore{
+			Score:          5,
+			UniqueValid:    5,
+			Intrusions:     0,
+			Perseverations: 0,
+			TotalProduced:  2,
+			WordsPerMinute: 120,
+			IntrusionRate:  0,
+			PersevRate:     0,
+		},
+		AssistantAnalysis: "Good job!",
+		CreatedAt:         time.Now(),
+	},
+}
+
 func NewLanguageFluencyMYSQLRepository(db *sql.DB) *LanguageFluencyMYSQLRepository {
 	return &LanguageFluencyMYSQLRepository{
 		Exec: db,
 	}
+}
+
+func NewMockLanguageFluencyRepository() *MockLanguageFluencyRepository {
+	return &MockLanguageFluencyRepository{}
 }
 
 func DomainToDBLanguageFluency(s LFdomain.LanguageFluency) *dbmodels.LanguageFluency {
@@ -54,9 +84,6 @@ func DomainToDBLanguageFluency(s LFdomain.LanguageFluency) *dbmodels.LanguageFlu
 	}
 }
 
-// ------------------------------
-// DB (sqlboiler model) -> Domain
-// ------------------------------
 func DBToDomainLanguageFluency(m *dbmodels.LanguageFluency) LFdomain.LanguageFluency {
 	var words []string
 	if m.AnswerWords.Valid { // m.AnswerWords es null.JSON
@@ -106,4 +133,15 @@ func (repo *LanguageFluencyMYSQLRepository) GetByEvaluationID(ctx context.Contex
 		return LFdomain.LanguageFluency{}, err
 	}
 	return DBToDomainLanguageFluency(dbLanguageFluency), nil
+}
+
+func (repo *MockLanguageFluencyRepository) Save(ctx context.Context, lf LFdomain.LanguageFluency) error {
+	return nil
+}
+func (repo *MockLanguageFluencyRepository) GetByID(ctx context.Context, id string) (LFdomain.LanguageFluency, error) {
+	return *MockLanguageFluencySubtests[0], nil
+}
+
+func (repo *MockLanguageFluencyRepository) GetByEvaluationID(ctx context.Context, evaluationID string) (LFdomain.LanguageFluency, error) {
+	return *MockLanguageFluencySubtests[0], nil
 }

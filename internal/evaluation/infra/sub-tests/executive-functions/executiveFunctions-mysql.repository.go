@@ -14,11 +14,36 @@ import (
 type ExecutivefunctionsMYSQLRepository struct {
 	Exec boil.ContextExecutor
 }
+type MockExecutiveFunctionsRepository struct{}
+
+var MockExecutiveFunctionsSubtests []EFdomain.ExecutiveFunctionsSubtest = []EFdomain.ExecutiveFunctionsSubtest{
+	{
+		PK:            "subtest1",
+		EvauluationId: "eval1",
+		NumberOfItems: 20,
+		TotalClicks:   50,
+		TotalErrors:   5,
+		TotalCorrect:  15,
+		TotalTime:     time.Duration(120 * time.Second),
+		Type:          EFdomain.ExuctiveFunctionSubtestType("a"),
+		Score: EFdomain.ExecutiveFunctionsScore{
+			Score:          85,
+			Accuracy:       0.75,
+			SpeedIndex:     0.7,
+			CommissionRate: 0.1,
+			DurationSec:    120,
+		},
+	},
+}
 
 func NewExecutiveFunctionsSubtestMYSQLRepository(db *sql.DB) *ExecutivefunctionsMYSQLRepository {
 	return &ExecutivefunctionsMYSQLRepository{
 		Exec: db,
 	}
+}
+
+func NewMockExecutiveFunctionsRepository() *MockExecutiveFunctionsRepository {
+	return &MockExecutiveFunctionsRepository{}
 }
 
 func domainToDBExecutiveFunctions(s EFdomain.ExecutiveFunctionsSubtest) *dbmodels.ExecutiveFunctionsSubtest {
@@ -91,4 +116,15 @@ func (m *ExecutivefunctionsMYSQLRepository) GetByEvaluationID(ctx context.Contex
 		out = append(out, dBToDomainExecutiveFunctions(subtest))
 	}
 	return out, nil
+}
+
+func (m *MockExecutiveFunctionsRepository) Save(ctx context.Context, subtest EFdomain.ExecutiveFunctionsSubtest) error {
+	return nil
+}
+func (m *MockExecutiveFunctionsRepository) GetByID(ctx context.Context, id string) (EFdomain.ExecutiveFunctionsSubtest, error) {
+	return MockExecutiveFunctionsSubtests[0], nil
+}
+
+func (m *MockExecutiveFunctionsRepository) GetByEvaluationID(ctx context.Context, evaluationID string) ([]EFdomain.ExecutiveFunctionsSubtest, error) {
+	return MockExecutiveFunctionsSubtests, nil
 }

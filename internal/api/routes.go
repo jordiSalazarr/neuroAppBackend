@@ -73,13 +73,25 @@ func getAppRepositories(db *sql.DB) Repositories {
 
 	return Repositories{
 		EvaluationsRepository:               infra.NewEvaluationsMYSQLRepository(db),
-		LetterCancellationRepository:        LCinfra.NewInMemoryLetterCancellationRepository(db),
+		LetterCancellationRepository:        LCinfra.NewMYSQLLetterCancellationRepository(db),
 		VerbalMemorySubtestRepository:       VEMinfra.NewVerbalMemoryMYSQLRepository(db),
 		ExecutiveFunctionsSubtestRepository: EFinfra.NewExecutiveFunctionsSubtestMYSQLRepository(db),
 		LanguageFluencyRepository:           LFinfra.NewLanguageFluencyMYSQLRepository(db),
 		VisualSpatialRepository:             INFRAvisualspatial.NewVisualSpatialMYSQLRepo(db),
-		VisualMemorySubtestRepository:       VIMinfra.NewVisualMemoryMYSQLRepository(db), //TODO: implement this with a real repository (sql)
+		VisualMemorySubtestRepository:       VIMinfra.NewVisualMemoryMYSQLRepository(db),
 		UserRepository:                      authI.NewUseMYSQLRepository(db),
+	}
+}
+
+func getAppMockRepositories() Repositories {
+	return Repositories{
+		EvaluationsRepository:               infra.NewMockEvaluationsRepository(),
+		LetterCancellationRepository:        LCinfra.NewMockLetterCancellationRepository(),
+		VerbalMemorySubtestRepository:       VEMinfra.NewMockVerbalMemoryRepository(),
+		LanguageFluencyRepository:           LFdomain.NewLanguageFluencyMock(),
+		VisualMemorySubtestRepository:       VIMinfra.NewMockVisualMemoryRepository(),
+		ExecutiveFunctionsSubtestRepository: EFinfra.NewMockExecutiveFunctionsRepository(),
+		UserRepository:                      authI.NewMockUsersRepository(),
 	}
 }
 func getAppServices() Services {
@@ -87,6 +99,15 @@ func getAppServices() Services {
 		LLMService:  services.NewOpenAIService(),
 		MailService: mail.NewMailer(),
 		// TemplateResolver:  services.LocalTemplateResolver{},
+		EncryptionService: encryption.NewEncryptionService(),
+		JwtService:        jwtService.New(),
+	}
+}
+
+func getAppMockServices() Services {
+	return Services{
+		LLMService:        services.NewMockOpenAIService(),
+		MailService:       nil,
 		EncryptionService: encryption.NewEncryptionService(),
 		JwtService:        jwtService.New(),
 	}

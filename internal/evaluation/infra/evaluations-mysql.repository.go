@@ -16,6 +16,39 @@ type EvaluationsMYSQLRepository struct {
 	Exec boil.ContextExecutor
 }
 
+type MockEvaluationsRepository struct{}
+
+var MockEvaluations []*domain.Evaluation = []*domain.Evaluation{
+	{
+		PK:                "eval1",
+		PatientName:       "John Doe",
+		PatientAge:        65,
+		SpecialistMail:    "john.doe@example.com",
+		SpecialistID:      "spec1",
+		CurrentStatus:     domain.EvaluationCurrentStatusCancelled,
+		AssistantAnalysis: "No significant findings.",
+		StorageURL:        "http://example.com/storage/eval1",
+		StorageKey:        "eval1",
+		CreatedAt:         time.Now(),
+	},
+	{
+		PK:                "eval2",
+		PatientName:       "Jane Smith",
+		PatientAge:        70,
+		SpecialistMail:    "jane.smith@example.com",
+		SpecialistID:      "spec2",
+		CurrentStatus:     domain.EvaluationCurrentStatusCompleted,
+		AssistantAnalysis: "No significant findings.",
+		StorageURL:        "http://example.com/storage/eval2",
+		StorageKey:        "eval2",
+		CreatedAt:         time.Now(),
+	},
+}
+
+func NewMockEvaluationsRepository() *MockEvaluationsRepository {
+	return &MockEvaluationsRepository{}
+}
+
 // NewUsersMYSQLRepository crea una nueva instancia de UsersMYSQLRepository
 func NewEvaluationsMYSQLRepository(db *sql.DB) *EvaluationsMYSQLRepository {
 	return &EvaluationsMYSQLRepository{Exec: db}
@@ -114,4 +147,19 @@ func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDa
 		domainEvaluations = append(domainEvaluations, &domainEval)
 	}
 	return domainEvaluations, nil
+}
+
+func (m *MockEvaluationsRepository) Save(ctx context.Context, evaluation domain.Evaluation) error {
+	return nil
+}
+
+func (m *MockEvaluationsRepository) Update(ctx context.Context, evaluation domain.Evaluation) error {
+	return nil
+}
+func (m *MockEvaluationsRepository) GetByID(ctx context.Context, id string) (domain.Evaluation, error) {
+	return *MockEvaluations[0], nil
+}
+
+func (f *MockEvaluationsRepository) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*domain.Evaluation, error) {
+	return MockEvaluations, nil
 }
