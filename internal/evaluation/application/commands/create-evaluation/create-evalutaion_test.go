@@ -22,7 +22,7 @@ func TestCreateEvaluationCommandHandler(t *testing.T) {
 		shouldPass bool
 	}{
 		{name: "Valid command", command: mockCommands[0], shouldPass: true},
-		{name: "Invalid name", command: mockCommands[1], shouldPass: false},
+		{name: "Invalid names", command: mockCommands[1], shouldPass: false},
 		{name: "Invalid age", command: mockCommands[2], shouldPass: false},
 	}
 
