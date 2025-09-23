@@ -48,6 +48,9 @@ func NewExecutiveFunctionsSubtest(
 	evaluationId string,
 	createdAt time.Time,
 ) (*ExecutiveFunctionsSubtest, error) {
+	if numberOfItems <= 0 || totalErrors < 0 || totalCorrect < 0 || totalClicks < 0 || (subtestType != A && subtestType != AB) || evaluationId == "" {
+		return nil, errors.New("error creating ExecutiveFunctionsSubtest")
+	}
 	return &ExecutiveFunctionsSubtest{
 		PK:             uuid.NewString(),
 		NumberOfItems:  numberOfItems,
@@ -65,7 +68,7 @@ func NewExecutiveFunctionsSubtest(
 func (s ExecutiveFunctionsSubtest) DurationSeconds() float64 {
 	sec := s.TotalTime.Seconds()
 	if sec <= 0 {
-		sec = 1 // evita divisiones por 0 o valores negativos
+		sec = 1
 	}
 	// Penalización: cada error añade +10 segundos
 	penalty := float64(s.TotalErrors * 10)

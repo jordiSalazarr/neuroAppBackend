@@ -2,11 +2,15 @@ package createvisualspatialsubtest
 
 import (
 	"context"
+	"errors"
 
 	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
 )
 
 func CreateViusualSpatialCommandHandler(ctx context.Context, cmd CreateVisualSpatialSubtestCommand, repo VPdomain.ResultRepository) (*VPdomain.VisualSpatialSubtest, error) {
+	if cmd.EvaluationID == "" {
+		return nil, errors.New("evaluation ID is required")
+	}
 	subtest, err := VPdomain.NewVisualSpatialSubtest(cmd.EvaluationID, cmd.Note, cmd.Score)
 	if err != nil {
 		return nil, err

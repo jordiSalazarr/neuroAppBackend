@@ -25,8 +25,8 @@ type LanguageFluency struct {
 }
 
 func NewLanguageFluency(language, proficiency, category string, answerWords []string, evaluationID string) (*LanguageFluency, error) {
-	if language == "" || proficiency == "" || category == "" {
-		return nil, errors.New("invalid input")
+	if language == "" || proficiency == "" || category == "" || len(answerWords) == 0 || evaluationID == "" {
+		return nil, errors.New("invalid input for creating LanguageFluency")
 	}
 	return &LanguageFluency{
 		PK:                uuid.New().String(),

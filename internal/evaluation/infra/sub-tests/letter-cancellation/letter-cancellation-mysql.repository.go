@@ -14,7 +14,54 @@ type LetterCancellationMYSQLRepository struct {
 	Exec boil.ContextExecutor
 }
 
-func NewInMemoryLetterCancellationRepository(db *sql.DB) *LetterCancellationMYSQLRepository {
+type MockLetterCancellationRepository struct{}
+
+var MockLetterCancellationSubtests []*LCdomain.LettersCancellationSubtest = []*LCdomain.LettersCancellationSubtest{
+	{
+		PK:                "subtest1",
+		EvaluationID:      "eval1",
+		TotalTargets:      50,
+		Correct:           45,
+		Errors:            5,
+		TimeInSecs:        60,
+		AssistantAnalysis: "Good performance.",
+		CancellationScore: LCdomain.CancellationScore{
+			Score:          90,
+			CpPerMin:       45.0,
+			Accuracy:       0.9,
+			Omissions:      5,
+			OmissionsRate:  0.1,
+			CommissionRate: 0.05,
+			HitsPerMin:     30.0,
+			ErrorsPerMin:   5.0,
+		},
+	},
+	{
+		PK:                "subtest2",
+		EvaluationID:      "eval2",
+		TotalTargets:      50,
+		Correct:           40,
+		Errors:            10,
+		TimeInSecs:        70,
+		AssistantAnalysis: "Average performance.",
+		CancellationScore: LCdomain.CancellationScore{
+			Score:          80,
+			CpPerMin:       34.29,
+			Accuracy:       0.8,
+			Omissions:      10,
+			OmissionsRate:  0.2,
+			CommissionRate: 0.1,
+			HitsPerMin:     25.71,
+			ErrorsPerMin:   8.57,
+		},
+	},
+}
+
+func NewMockLetterCancellationRepository() *MockLetterCancellationRepository {
+	return &MockLetterCancellationRepository{}
+}
+
+func NewMYSQLLetterCancellationRepository(db *sql.DB) *LetterCancellationMYSQLRepository {
 	return &LetterCancellationMYSQLRepository{
 		Exec: db,
 	}
@@ -78,5 +125,14 @@ func (repo *LetterCancellationMYSQLRepository) GetByEvaluationID(ctx context.Con
 	}
 
 	return dbToDomainLetterCancellation(dbLetterCancellation), nil
+
+}
+
+func (repo *MockLetterCancellationRepository) Save(ctx context.Context, subtest *LCdomain.LettersCancellationSubtest) error {
+	return nil
+}
+
+func (repo *MockLetterCancellationRepository) GetByEvaluationID(ctx context.Context, evaluationID string) (LCdomain.LettersCancellationSubtest, error) {
+	return *MockLetterCancellationSubtests[0], nil
 
 }

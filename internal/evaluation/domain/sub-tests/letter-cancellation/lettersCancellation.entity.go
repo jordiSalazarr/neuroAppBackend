@@ -44,8 +44,11 @@ type CancellationScoreConfig struct {
 	CapErrorFactor float64 // default 2.0
 }
 
-func NewLettersCancellationSubtest(totalTargets, correct, errors, timeInSecs int, evaluationID string, cfg *CancellationScoreConfig) (*LettersCancellationSubtest, error) {
-	score, err := calculateCancellationScore(totalTargets, correct, errors, timeInSecs, cfg)
+func NewLettersCancellationSubtest(totalTargets, correct, errs, timeInSecs int, evaluationID string, cfg *CancellationScoreConfig) (*LettersCancellationSubtest, error) {
+	if evaluationID == "" || totalTargets <= 0 || correct < 0 || correct > totalTargets || errs < 0 || timeInSecs <= 0 {
+		return nil, errors.New("invalid input for creation of LettersCancellationSubtest")
+	}
+	score, err := calculateCancellationScore(totalTargets, correct, errs, timeInSecs, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +56,7 @@ func NewLettersCancellationSubtest(totalTargets, correct, errors, timeInSecs int
 		PK:                uuid.NewString(),
 		TotalTargets:      totalTargets,
 		Correct:           correct,
-		Errors:            errors,
+		Errors:            errs,
 		TimeInSecs:        timeInSecs,
 		EvaluationID:      evaluationID,
 		CancellationScore: score,

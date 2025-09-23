@@ -15,6 +15,20 @@ type OpenAIService struct {
 	ApiKey string
 }
 
+type MockOpenAIService struct{}
+
+func NewMockOpenAIService() MockOpenAIService {
+	return MockOpenAIService{}
+}
+
+func (m MockOpenAIService) GenerateAnalysis(ev domain.Evaluation) (string, error) {
+	return "Mocked analysis", nil
+}
+
+func (m MockOpenAIService) Ask(prompt string) (string, error) {
+	return "Mocked response", nil
+}
+
 func NewOpenAIService() OpenAIService {
 	apiKey := config.GetConfig().OpenAIKey
 	if apiKey == "" {

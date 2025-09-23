@@ -9,22 +9,21 @@ import (
 	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
 )
 
-// =========================
-// Repo
-// =========================
-
 type VisualSpatialMYSQLRepo struct {
 	DB *sql.DB
 }
+type MockVisualSpatialRepository struct{}
+
+func NewMockVisualSpatialRepository() *MockVisualSpatialRepository {
+	return &MockVisualSpatialRepository{}
+}
+
+//TODO: implement mock repo and test everything
 
 func NewVisualSpatialMYSQLRepo(db *sql.DB) *VisualSpatialMYSQLRepo {
 	return &VisualSpatialMYSQLRepo{DB: db}
 }
 
-// Save hace un upsert "manual":
-// - Intenta UPDATE por id.
-// - Si no actualiza filas, hace INSERT.
-// Nota: actualiza UpdatedAt a time.Now().
 func (r *VisualSpatialMYSQLRepo) Save(ctx context.Context, res *VPdomain.VisualSpatialSubtest) error {
 	if r == nil || r.DB == nil {
 		return errors.New("nil repo or DB")
@@ -119,10 +118,6 @@ func (r *VisualSpatialMYSQLRepo) GetByEvaluationID(ctx context.Context, evaluati
 	return row.toDomain()
 }
 
-// =========================
-// Mappers dominio ⇄ DB
-// =========================
-
 type visualSpatialRow struct {
 	ID           string
 	EvaluationID string
@@ -153,4 +148,17 @@ func (r visualSpatialRow) toDomain() (*VPdomain.VisualSpatialSubtest, error) {
 		r.CreatedAt,
 		r.UpdatedAt,
 	)
+}
+
+func (r *MockVisualSpatialRepository) Save(ctx context.Context, res *VPdomain.VisualSpatialSubtest) error {
+	return nil
+}
+
+func (r *MockVisualSpatialRepository) GetByID(ctx context.Context, id string) (*VPdomain.VisualSpatialSubtest, error) {
+	return &VPdomain.VisualSpatialSubtest{}, nil
+}
+
+func (r *MockVisualSpatialRepository) GetByEvaluationID(ctx context.Context, evaluationID string) (*VPdomain.VisualSpatialSubtest, error) {
+	return &VPdomain.VisualSpatialSubtest{}, nil
+
 }
