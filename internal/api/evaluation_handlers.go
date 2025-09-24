@@ -106,11 +106,13 @@ func (app *App) ListEvaluations(c *gin.Context) {
 	// 3) Parse de fechas (opcionales)
 	from, err := parseTimeFlexible(dto.FromDateStr)
 	if err != nil {
+		app.Logger.Error(c.Request.Context(), "error parsing from_date", err, c.Keys)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "param": "from_date"})
 		return
 	}
 	to, err := parseTimeFlexible(dto.ToDateStr)
 	if err != nil {
+		app.Logger.Error(c.Request.Context(), "error parsing to_date", err, c.Keys)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "param": "to_date"})
 		return
 	}
