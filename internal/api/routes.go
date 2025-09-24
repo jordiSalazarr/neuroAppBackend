@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/time/rate"
 	authD "neuro.app.jordi/internal/auth/domain"
 	"neuro.app.jordi/internal/evaluation/domain"
 	services "neuro.app.jordi/internal/evaluation/services/openAI"
@@ -33,16 +34,16 @@ import (
 	"neuro.app.jordi/internal/shared/midleware"
 )
 
-// var limiter = rate.NewLimiter(100, 5)
+var limiter = rate.NewLimiter(100, 5)
 
-// func rateLimiter(c *gin.Context) {
-// 	if !limiter.Allow() {
-// 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "too many requests"})
-// 		c.Abort()
-// 		return
-// 	}
-// 	c.Next()
-// }
+func rateLimiter(c *gin.Context) {
+	if !limiter.Allow() {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "too many requests"})
+		c.Abort()
+		return
+	}
+	c.Next()
+}
 
 type App struct {
 	Repositories Repositories
@@ -136,11 +137,12 @@ func (app *App) SetupRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 	// --- your groups below ---
-	auth := midleware.ExtractJWTFromRequest(app.Services.JwtService)
+	//TODO: add auth middleware to protect routes
+	// auth := midleware.ExtractJWTFromRequest(app.Services.JwtService)
 	loggConfig := midleware.NewAccessLogConfig()
 	r.Use(midleware.AccessLog(app.Logger, loggConfig))
-	// r.Use(rateLimiter) // if you want a global rate limiter
-	eval := r.Group("/v1/evaluations", auth)
+	r.Use(rateLimiter) // if you want a global rate limiter
+	eval := r.Group("/v1/evaluations")
 	{
 		eval.POST("", app.CreateEvaluation)
 		eval.POST("/letter-cancellation", app.CreateLetterCancellationSubtest)
