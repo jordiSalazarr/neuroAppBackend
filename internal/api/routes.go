@@ -30,6 +30,7 @@ import (
 	jwtService "neuro.app.jordi/internal/shared/jwt"
 	logging "neuro.app.jordi/internal/shared/logger"
 	"neuro.app.jordi/internal/shared/mail"
+	"neuro.app.jordi/internal/shared/midleware"
 )
 
 // var limiter = rate.NewLimiter(100, 5)
@@ -83,17 +84,6 @@ func getAppRepositories(db *sql.DB) Repositories {
 	}
 }
 
-func getAppMockRepositories() Repositories {
-	return Repositories{
-		EvaluationsRepository:               infra.NewMockEvaluationsRepository(),
-		LetterCancellationRepository:        LCinfra.NewMockLetterCancellationRepository(),
-		VerbalMemorySubtestRepository:       VEMinfra.NewMockVerbalMemoryRepository(),
-		LanguageFluencyRepository:           LFdomain.NewLanguageFluencyMock(),
-		VisualMemorySubtestRepository:       VIMinfra.NewMockVisualMemoryRepository(),
-		ExecutiveFunctionsSubtestRepository: EFinfra.NewMockExecutiveFunctionsRepository(),
-		UserRepository:                      authI.NewMockUsersRepository(),
-	}
-}
 func getAppServices() Services {
 	return Services{
 		LLMService:  services.NewOpenAIService(),
@@ -103,16 +93,6 @@ func getAppServices() Services {
 		JwtService:        jwtService.New(),
 	}
 }
-
-func getAppMockServices() Services {
-	return Services{
-		LLMService:        services.NewMockOpenAIService(),
-		MailService:       nil,
-		EncryptionService: encryption.NewEncryptionService(),
-		JwtService:        jwtService.New(),
-	}
-}
-
 func NewApp(db *sql.DB) *App {
 	appRepositories := getAppRepositories(db)
 	appServices := getAppServices()
@@ -156,7 +136,11 @@ func (app *App) SetupRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 	// --- your groups below ---
-	eval := r.Group("/v1/evaluations")
+	auth := midleware.ExtractJWTFromRequest(app.Services.JwtService)
+	loggConfig := midleware.NewAccessLogConfig()
+	r.Use(midleware.AccessLog(app.Logger, loggConfig))
+	// r.Use(rateLimiter) // if you want a global rate limiter
+	eval := r.Group("/v1/evaluations", auth)
 	{
 		eval.POST("", app.CreateEvaluation)
 		eval.POST("/letter-cancellation", app.CreateLetterCancellationSubtest)
