@@ -212,7 +212,8 @@ func (app *App) FinnishEvaluation(c *gin.Context) {
 	evaluation, err := finishevaluation.FinisEvaluationCommanndHandler(c.Request.Context(),
 		command, app.Repositories.EvaluationsRepository,
 		app.Services.LLMService, app.Services.FileFormater, reportsPublisher, app.Repositories.VerbalMemorySubtestRepository,
-		app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository, app.Repositories.VisualSpatialRepository)
+		app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository, app.Repositories.VisualSpatialRepository,
+		app.Services.MailService)
 	if err != nil {
 		app.Logger.Error(c.Request.Context(), "error when finishiing evaluation", err, c.Keys)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

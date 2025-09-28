@@ -3,6 +3,7 @@ package finishevaluation
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"neuro.app.jordi/internal/evaluation/application/services"
 	"neuro.app.jordi/internal/evaluation/domain"
@@ -13,15 +14,17 @@ import (
 	VEMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/verbal-memory"
 	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
 	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
+	fileformatter "neuro.app.jordi/internal/shared/file-formatter"
+	"neuro.app.jordi/internal/shared/mail"
 )
 
 func FinisEvaluationCommanndHandler(
 	ctx context.Context, command FinisEvaluationCommannd,
 	evaluationRepository domain.EvaluationsRepository, llmService domain.LLMService,
-	fileFormatterService domain.FileFormaterService,
+	fileFormatterService fileformatter.FileFormaterService,
 	evaluationPublisher reports.Publisher, verbalMemoryRepository VEMdomain.VerbalMemoryRepository,
 	visualMemoryRepository VIMdomain.VisualMemoryRepository, executiveFunctionsRepository EFdomain.ExecutiveFunctionsSubtestRepository,
-	letterCancellationRepository LCdomain.LetterCancellationRepository, languageFluencyRepository LFdomain.LanguageFluencyRepository, visualSpatialRepository VPdomain.ResultRepository) (domain.Evaluation, error) {
+	letterCancellationRepository LCdomain.LetterCancellationRepository, languageFluencyRepository LFdomain.LanguageFluencyRepository, visualSpatialRepository VPdomain.ResultRepository, mailService mail.MailProvider) (domain.Evaluation, error) {
 	if command.EvaluationID == "" {
 		return domain.Evaluation{}, errors.New("evaluation ID is required")
 	}
@@ -45,6 +48,22 @@ func FinisEvaluationCommanndHandler(
 	if err = evaluationRepository.Update(ctx, evaluation); err != nil {
 		return domain.Evaluation{}, err
 	}
+
+	go func(ctx context.Context) {
+		htmlContent, err := fileFormatterService.GenerateHTML(evaluation)
+		if err != nil {
+			fmt.Println("Error generating HTML:", err)
+		}
+		pdfBytes, err := fileFormatterService.ConvertHTMLtoPDF(htmlContent)
+		if err != nil {
+			fmt.Println("Error generating PDF:", err)
+		}
+		err = mailService.SendEmailWithAttachment(ctx, evaluation.SpecialistMail, "Informe de evaluación completado", "El informe de la evaluación para el paciente "+evaluation.PatientName+" ha sido completado. Adjunto encontrarás el informe en formato PDF.", "El informe de la evaluación para el paciente "+evaluation.PatientName+" ha sido completado.", pdfBytes)
+		if err != nil {
+			fmt.Println("Error sending email:", err)
+		}
+	}(context.TODO())
+
 	return evaluation, err
 
 }

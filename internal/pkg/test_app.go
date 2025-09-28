@@ -22,6 +22,7 @@ import (
 	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
 	services "neuro.app.jordi/internal/evaluation/services/openAI"
 	"neuro.app.jordi/internal/shared/encryption"
+	fileformatter "neuro.app.jordi/internal/shared/file-formatter"
 	jwtService "neuro.app.jordi/internal/shared/jwt"
 	logging "neuro.app.jordi/internal/shared/logger"
 	"neuro.app.jordi/internal/shared/mail"
@@ -50,7 +51,7 @@ type Services struct {
 	JwtService        *jwtService.Service
 	EncryptionService authD.EncryptionService
 	// TemplateResolver  VIMdomain.TemplateResolver
-	FileFormater domain.FileFormaterService
+	FileFormater fileformatter.FileFormaterService
 }
 
 func getAppMockRepositories() Repositories {

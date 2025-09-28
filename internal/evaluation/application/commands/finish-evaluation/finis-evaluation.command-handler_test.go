@@ -52,6 +52,7 @@ func TestFinisEvaluationCommanndHandler(t *testing.T) {
 				app.Repositories.LetterCancellationRepository,
 				app.Repositories.LanguageFluencyRepository,
 				app.Repositories.VisualSpatialRepository,
+				app.Services.MailService,
 			)
 
 			if tt.shouldPass {

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"os"
@@ -28,6 +29,7 @@ import (
 	VIMinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/visual-memory"
 	INFRAvisualspatial "neuro.app.jordi/internal/evaluation/infra/sub-tests/visual-spatial"
 	"neuro.app.jordi/internal/shared/encryption"
+	fileformatter "neuro.app.jordi/internal/shared/file-formatter"
 	jwtService "neuro.app.jordi/internal/shared/jwt"
 	logging "neuro.app.jordi/internal/shared/logger"
 	"neuro.app.jordi/internal/shared/mail"
@@ -68,7 +70,7 @@ type Services struct {
 	JwtService        *jwtService.Service
 	EncryptionService authD.EncryptionService
 	// TemplateResolver  VIMdomain.TemplateResolver
-	FileFormater domain.FileFormaterService
+	FileFormater fileformatter.FileFormaterService
 }
 
 func getAppRepositories(db *sql.DB) Repositories {
@@ -86,12 +88,16 @@ func getAppRepositories(db *sql.DB) Repositories {
 }
 
 func getAppServices() Services {
+	mailService, err := mail.NewSESEmailSender(context.Background())
+	if err != nil {
+		panic("failed to initialize SES email sender: " + err.Error())
+	}
 	return Services{
-		LLMService:  services.NewOpenAIService(),
-		MailService: mail.NewMailer(),
-		// TemplateResolver:  services.LocalTemplateResolver{},
+		LLMService:        services.NewOpenAIService(),
+		MailService:       mailService,
 		EncryptionService: encryption.NewEncryptionService(),
 		JwtService:        jwtService.New(),
+		FileFormater:      fileformatter.NewWKHTMLFileFormatter(),
 	}
 }
 func NewApp(db *sql.DB) *App {
