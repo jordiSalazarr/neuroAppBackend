@@ -7,6 +7,7 @@ import (
 	"neuro.app.jordi/internal/evaluation/domain"
 	reports "neuro.app.jordi/internal/evaluation/domain/services"
 	"neuro.app.jordi/internal/pkg"
+	fileformatter "neuro.app.jordi/internal/shared/file-formatter"
 )
 
 func TestFinisEvaluationCommanndHandler(t *testing.T) {
@@ -44,8 +45,8 @@ func TestFinisEvaluationCommanndHandler(t *testing.T) {
 				tt.cmd,
 				app.Repositories.EvaluationsRepository,
 				app.Services.LLMService,
-				nil,                 // no se usa en el handler actual, pero mantenemos la firma
-				reports.Publisher{}, // idem
+				fileformatter.MockFileFormatterService{}, // no se usa en el handler actual, pero mantenemos la firma
+				reports.Publisher{},                      // idem
 				app.Repositories.VerbalMemorySubtestRepository,
 				app.Repositories.VisualMemorySubtestRepository,
 				app.Repositories.ExecutiveFunctionsSubtestRepository,
