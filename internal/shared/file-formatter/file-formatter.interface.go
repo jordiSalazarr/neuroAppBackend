@@ -7,6 +7,10 @@ type FileFormaterService interface {
 	ConvertHTMLtoPDF(html string) ([]byte, error)
 }
 
+func NewMockFileFormatterService() MockFileFormatterService {
+	return MockFileFormatterService{}
+}
+
 type MockFileFormatterService struct{}
 
 func (m MockFileFormatterService) GenerateHTML(evaluation domain.Evaluation) (string, error) {

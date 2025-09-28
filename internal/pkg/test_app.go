@@ -71,9 +71,10 @@ func getAppMockRepositories() Repositories {
 func getAppMockServices() Services {
 	return Services{
 		LLMService:        services.NewMockOpenAIService(),
-		MailService:       nil,
+		MailService:       mail.NewMockMailService(),
 		EncryptionService: encryption.NewEncryptionService(),
 		JwtService:        jwtService.New(),
+		FileFormater:      fileformatter.NewMockFileFormatterService(),
 	}
 }
 
