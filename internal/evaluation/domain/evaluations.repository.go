@@ -13,6 +13,8 @@ type EvaluationsRepository interface {
 	Update(ctx context.Context, evaluation Evaluation) error
 
 	GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*Evaluation, error)
+
+	CanFinishEvaluation(ctx context.Context, evaluationID, specialistID string) (bool, error)
 }
 
 type MockEvaluationsRepository struct {
@@ -23,6 +25,10 @@ func NewEvaluationsRepository() *MockEvaluationsRepository {
 	return &MockEvaluationsRepository{
 		evaluations: []Evaluation{},
 	}
+}
+
+func CanFinishEvaluation(evaluationID, specialistID string) (bool, error) {
+	return true, nil
 }
 
 func (m *MockEvaluationsRepository) Save(ctx context.Context, evaluation Evaluation) error {

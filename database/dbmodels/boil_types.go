@@ -50,22 +50,3 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	strmangle.PutBuffer(buf)
 	return str
 }
-
-// Enum values for EvaluationsCurrentStatus
-const (
-	EvaluationsCurrentStatusCREATED     string = "CREATED"
-	EvaluationsCurrentStatusIN_PROGRESS string = "IN_PROGRESS"
-	EvaluationsCurrentStatusCOMPLETED   string = "COMPLETED"
-	EvaluationsCurrentStatusCANCELLED   string = "CANCELLED"
-	EvaluationsCurrentStatusFAILED      string = "FAILED"
-)
-
-func AllEvaluationsCurrentStatus() []string {
-	return []string{
-		EvaluationsCurrentStatusCREATED,
-		EvaluationsCurrentStatusIN_PROGRESS,
-		EvaluationsCurrentStatusCOMPLETED,
-		EvaluationsCurrentStatusCANCELLED,
-		EvaluationsCurrentStatusFAILED,
-	}
-}

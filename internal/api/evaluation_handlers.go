@@ -14,6 +14,7 @@ import (
 	createvisualspatialsubtest "neuro.app.jordi/internal/evaluation/application/commands/create-visual-spatial-subtest"
 	createvisualmemorysubtest "neuro.app.jordi/internal/evaluation/application/commands/create-visualMemory-subtest"
 	finishevaluation "neuro.app.jordi/internal/evaluation/application/commands/finish-evaluation"
+	canfinishevaluation "neuro.app.jordi/internal/evaluation/application/queries/can-finish-evaluation"
 	getevaluation "neuro.app.jordi/internal/evaluation/application/queries/get-evaluation"
 	listevaluations "neuro.app.jordi/internal/evaluation/application/queries/get-evaluations"
 	"neuro.app.jordi/internal/evaluation/domain"
@@ -330,4 +331,30 @@ func (app *App) CreateVisualSpatialSubtest(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, sub)
+}
+
+func (app *App) CanFinishEvaluation(c *gin.Context) {
+	evalID := c.Param("evaluation_id")
+	if evalID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "evaluation_id is required"})
+		return
+	}
+	specialistID := c.Param("specialist_id")
+	if specialistID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "specialist_id is required"})
+		return
+	}
+
+	query := canfinishevaluation.CanFinishEvaluationQuery{
+		EvaluationID: evalID,
+		SpecialistID: specialistID,
+	}
+	canFinish, err := canfinishevaluation.CanFinishEvaluationQueryHandler(c.Request.Context(), query, app.Repositories.EvaluationsRepository, app.Repositories.VerbalMemorySubtestRepository, app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository, app.Repositories.VisualSpatialRepository)
+	if err != nil {
+		app.Logger.Error(c.Request.Context(), "error checking if can finish evaluation", err, c.Keys)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"can_finish": canFinish})
 }

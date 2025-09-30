@@ -13,7 +13,6 @@ func CreateLanguageFluencySubtestCommandHandler(ctx context.Context, cmd CreateL
 		return LFdomain.LanguageFluency{}, errors.New("evaluation id is required")
 	}
 	evaluation, err := evaluationRepo.GetByID(ctx, cmd.EvaluationID)
-
 	if err != nil {
 		return LFdomain.LanguageFluency{}, err
 	}
@@ -28,16 +27,12 @@ func CreateLanguageFluencySubtestCommandHandler(ctx context.Context, cmd CreateL
 	}
 	languageFluency.Score = score
 
-	// res, err := llmService.LanguageFluencyAnalysis(languageFluency, evaluation.PatientAge)
-	// if err != nil {
-	// 	return LFdomain.LanguageFluency{}, err
-	// }
-	// languageFluency.AssistantAnalysis = res
-
 	err = languageFluencyRepo.Save(ctx, *languageFluency)
 	if err != nil {
 		return LFdomain.LanguageFluency{}, err
 	}
+	evaluation.CurrentStatus = domain.EvaluationCurrentStatusPending
+	err = evaluationRepo.Update(ctx, evaluation)
 
-	return *languageFluency, nil
+	return *languageFluency, err
 }
