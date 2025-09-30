@@ -334,12 +334,12 @@ func (app *App) CreateVisualSpatialSubtest(c *gin.Context) {
 }
 
 func (app *App) CanFinishEvaluation(c *gin.Context) {
-	evalID := c.Query("evaluation_id")
+	evalID := c.Param("evaluation_id")
 	if evalID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "evaluation_id is required"})
 		return
 	}
-	specialistID := c.Query("specialist_id")
+	specialistID := c.Param("specialist_id")
 	if specialistID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "specialist_id is required"})
 		return
@@ -349,7 +349,7 @@ func (app *App) CanFinishEvaluation(c *gin.Context) {
 		EvaluationID: evalID,
 		SpecialistID: specialistID,
 	}
-	canFinish, err := canfinishevaluation.CanFinishEvaluationQueryHandler(c.Request.Context(), query, app.Repositories.EvaluationsRepository)
+	canFinish, err := canfinishevaluation.CanFinishEvaluationQueryHandler(c.Request.Context(), query, app.Repositories.EvaluationsRepository, app.Repositories.VerbalMemorySubtestRepository, app.Repositories.VisualMemorySubtestRepository, app.Repositories.ExecutiveFunctionsSubtestRepository, app.Repositories.LetterCancellationRepository, app.Repositories.LanguageFluencyRepository, app.Repositories.VisualSpatialRepository)
 	if err != nil {
 		app.Logger.Error(c.Request.Context(), "error checking if can finish evaluation", err, c.Keys)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

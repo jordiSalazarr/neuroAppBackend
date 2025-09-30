@@ -3,6 +3,7 @@ package EFinfra
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/aarondl/null/v8"
@@ -110,7 +111,10 @@ func (m *ExecutivefunctionsMYSQLRepository) GetByEvaluationID(ctx context.Contex
 		dbmodels.ExecutiveFunctionsSubtestWhere.EvaluationID.EQ(evaluationID),
 	).All(ctx, m.Exec)
 	if err != nil {
-		return []EFdomain.ExecutiveFunctionsSubtest{}, nil
+		return []EFdomain.ExecutiveFunctionsSubtest{}, err
+	}
+	if len(dbExecutiveFunctionSubtest) < 2 {
+		return []EFdomain.ExecutiveFunctionsSubtest{}, errors.New("no executive functions subtest found for evaluation")
 	}
 	for _, subtest := range dbExecutiveFunctionSubtest {
 		out = append(out, dBToDomainExecutiveFunctions(subtest))

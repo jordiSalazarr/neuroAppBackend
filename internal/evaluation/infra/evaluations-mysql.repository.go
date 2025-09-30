@@ -84,11 +84,13 @@ func dbEvaluationToDomain(evaluation *dbmodels.Evaluation) domain.Evaluation {
 	}
 }
 func (m *EvaluationsMYSQLRepository) CanFinishEvaluation(ctx context.Context, evaluationID, specialistID string) (bool, error) {
+	//TODO: deprecate this, not needed.
+	//This is wrong, I should check that all subtests are completed
 	return dbmodels.Evaluations(
 		dbmodels.EvaluationWhere.ID.EQ(evaluationID),
 		dbmodels.EvaluationWhere.SpecialistID.EQ(specialistID),
 		dbmodels.EvaluationWhere.CurrentStatus.EQ(string(domain.EvaluationCurrentStatusPending)),
-	).Exists(ctx, nil)
+	).Exists(ctx, m.Exec)
 }
 func (m *EvaluationsMYSQLRepository) Save(ctx context.Context, evaluation domain.Evaluation) error {
 	dbEvaluation := domainEvaluationToDB(evaluation)
