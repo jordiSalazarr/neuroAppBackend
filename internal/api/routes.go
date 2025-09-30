@@ -157,6 +157,7 @@ func (app *App) SetupRouter() *gin.Engine {
 		eval.POST("/language-fluency", app.LanguageFluencySubtest)
 		eval.POST("/visual-memory", app.CreateVisualMemorySubtest)
 		eval.POST("/visual-spatial", app.CreateVisualSpatialSubtest)
+		eval.GET("/can-finish-evaluation", app.CanFinishEvaluation)
 		eval.POST("/finish-evaluation", app.FinnishEvaluation)
 		eval.GET("/:id", app.GetEvaluation)
 		eval.GET("", app.ListEvaluations)

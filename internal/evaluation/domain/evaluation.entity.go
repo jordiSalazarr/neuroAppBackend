@@ -27,6 +27,7 @@ const (
 	EvaluationCurrentStatusCompleted  EvaluationCurrentStatus = "COMPLETED"
 	EvaluationCurrentStatusCancelled  EvaluationCurrentStatus = "CANCELLED"
 	EvaluationCurrentStatusFailed     EvaluationCurrentStatus = "FAILED"
+	EvaluationCurrentStatusPending    EvaluationCurrentStatus = "PENDING" // subtests finished, waiting for assistant analysis
 )
 
 type Evaluation struct {

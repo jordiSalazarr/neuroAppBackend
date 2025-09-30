@@ -83,7 +83,13 @@ func dbEvaluationToDomain(evaluation *dbmodels.Evaluation) domain.Evaluation {
 		CreatedAt:         evaluation.CreatedAt,
 	}
 }
-
+func (m *EvaluationsMYSQLRepository) CanFinishEvaluation(ctx context.Context, evaluationID, specialistID string) (bool, error) {
+	return dbmodels.Evaluations(
+		dbmodels.EvaluationWhere.ID.EQ(evaluationID),
+		dbmodels.EvaluationWhere.SpecialistID.EQ(specialistID),
+		dbmodels.EvaluationWhere.CurrentStatus.EQ(string(domain.EvaluationCurrentStatusPending)),
+	).Exists(ctx, nil)
+}
 func (m *EvaluationsMYSQLRepository) Save(ctx context.Context, evaluation domain.Evaluation) error {
 	dbEvaluation := domainEvaluationToDB(evaluation)
 	return dbEvaluation.Insert(ctx, m.Exec, boil.Infer())
@@ -126,7 +132,7 @@ func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDa
 		qm.Limit(limit),
 	)
 	if onlyCompleted {
-		query = append(query, dbmodels.EvaluationWhere.CurrentStatus.EQ(dbmodels.EvaluationsCurrentStatusCOMPLETED))
+		query = append(query, dbmodels.EvaluationWhere.CurrentStatus.EQ(string(domain.EvaluationCurrentStatusCompleted)))
 	}
 	if searchTerm != "" {
 		query = append(
@@ -162,4 +168,8 @@ func (m *MockEvaluationsRepository) GetByID(ctx context.Context, id string) (dom
 
 func (f *MockEvaluationsRepository) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*domain.Evaluation, error) {
 	return MockEvaluations, nil
+}
+
+func (m *MockEvaluationsRepository) CanFinishEvaluation(ctx context.Context, evaluationID, specialistID string) (bool, error) {
+	return false, nil
 }
