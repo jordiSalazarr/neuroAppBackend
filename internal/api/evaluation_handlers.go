@@ -118,12 +118,6 @@ func (app *App) ListEvaluations(c *gin.Context) {
 		return
 	}
 
-	// (Opcional) Si solo vino YYYY-MM-DD en "to", puedes ajustar a fin de día:
-	// if !to.IsZero() && dto.ToDateStr != "" && len(dto.ToDateStr) == len("2006-01-02") {
-	// 	to = to.Add(24 * time.Hour).Add(-time.Nanosecond) // 23:59:59.999999999
-	// }
-
-	// 4) Construir query de dominio
 	query := listevaluations.ListEvaluationsQuery{
 		SpecialistID:  dto.SpecialistID,
 		FromDate:      from, // zero => sin filtro si tu capa de aplicación lo permite
@@ -133,8 +127,7 @@ func (app *App) ListEvaluations(c *gin.Context) {
 		Limit:         limit,
 		OnlyCompleted: true,
 	}
-
-	// 5) Handler de aplicación
+	//TODO: this is a query handler...
 	evaluations, err := listevaluations.GetEvaluationsCommandHandler(
 		c.Request.Context(),
 		query,
@@ -146,7 +139,6 @@ func (app *App) ListEvaluations(c *gin.Context) {
 		return
 	}
 
-	// 6) Map a API
 	returnEvals := make([]EvaluationAPI, 0, len(evaluations))
 	for _, eval := range evaluations {
 		apiEval := domainToAPIEvaluation(*eval)

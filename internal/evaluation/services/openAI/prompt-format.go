@@ -71,6 +71,7 @@ type LLMVerbalMemorySummary struct {
 	Accuracy          float64 `json:"accuracy"`
 	IntrusionRate     float64 `json:"intrusionRate"`
 	PerseverationRate float64 `json:"perseverationRate"`
+	Subtype           string  `json:"subtype"`
 }
 
 type LLMExecOnePart struct {
@@ -108,7 +109,7 @@ type LLMVisualSpatialSummary struct {
 type LLMSummary struct {
 	LettersCancellation LLMLettersSummary         `json:"letters_cancellation"`
 	VisualMemory        LLMVisualMemorySummary    `json:"visual_memory"`
-	VerbalMemory        LLMVerbalMemorySummary    `json:"verbal_memory"`
+	VerbalMemory        []LLMVerbalMemorySummary  `json:"verbal_memory"`
 	ExecutiveFunctions  LLMExecutiveSummary       `json:"executive_functions"`
 	LanguageFluency     LLMLanguageFluencySummary `json:"language_fluency"`
 	VisualSpatial       LLMVisualSpatialSummary   `json:"visual_spatial"`
@@ -159,19 +160,23 @@ func buildVisualMemory(ev domain.Evaluation) LLMVisualMemorySummary {
 	}
 }
 
-func buildVerbalMemory(ev domain.Evaluation) LLMVerbalMemorySummary {
+func buildVerbalMemory(ev domain.Evaluation) []LLMVerbalMemorySummary {
 	vm := ev.VerbalmemorySubTest
-	return LLMVerbalMemorySummary{
-		Present:           vm.Pk != "",
-		Score0to100:       vm.Score.Score,
-		Hits:              vm.Score.Hits,
-		Omissions:         vm.Score.Omissions,
-		Intrusions:        vm.Score.Intrusions,
-		Perseverations:    vm.Score.Perseverations,
-		Accuracy:          vm.Score.Accuracy,
-		IntrusionRate:     vm.Score.IntrusionRate,
-		PerseverationRate: vm.Score.PerseverationRate,
+	var out []LLMVerbalMemorySummary
+	for _, subtest := range vm {
+		llmSubtest := LLMVerbalMemorySummary{
+			Score0to100:       subtest.Score.Score,
+			Hits:              subtest.Score.Hits,
+			Omissions:         subtest.Score.Omissions,
+			Intrusions:        subtest.Score.Intrusions,
+			Perseverations:    subtest.Score.Perseverations,
+			Accuracy:          subtest.Score.Accuracy,
+			IntrusionRate:     subtest.Score.IntrusionRate,
+			PerseverationRate: subtest.Score.PerseverationRate,
+		}
+		out = append(out, llmSubtest)
 	}
+	return out
 }
 
 func buildExecutive(ev domain.Evaluation) LLMExecutiveSummary {
