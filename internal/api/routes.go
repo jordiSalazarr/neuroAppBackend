@@ -55,12 +55,12 @@ type App struct {
 	Logger logging.Logger
 }
 type Repositories struct {
-	EvaluationsRepository               domain.EvaluationsRepository                 //TODO: add this implementation
-	LetterCancellationRepository        LCdomain.LetterCancellationRepository        //TODO: add this implementation
-	VerbalMemorySubtestRepository       VEMdomain.VerbalMemoryRepository             //TODO: add this implementation
-	LanguageFluencyRepository           LFdomain.LanguageFluencyRepository           //TODO: add this implementation
-	VisualMemorySubtestRepository       VIMdomain.VisualMemoryRepository             //TODO: add this implementation
-	ExecutiveFunctionsSubtestRepository EFdomain.ExecutiveFunctionsSubtestRepository //TODO: add this implementation
+	EvaluationsRepository               domain.EvaluationsRepository
+	LetterCancellationRepository        LCdomain.LetterCancellationRepository
+	VerbalMemorySubtestRepository       VEMdomain.VerbalMemoryRepository
+	LanguageFluencyRepository           LFdomain.LanguageFluencyRepository
+	VisualMemorySubtestRepository       VIMdomain.VisualMemoryRepository
+	ExecutiveFunctionsSubtestRepository EFdomain.ExecutiveFunctionsSubtestRepository
 	VisualSpatialRepository             VPdomain.ResultRepository
 	UserRepository                      authD.UserRepository
 }

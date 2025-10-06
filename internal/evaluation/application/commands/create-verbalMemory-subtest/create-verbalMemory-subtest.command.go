@@ -7,4 +7,5 @@ type CreateVerbalMemorySubtestCommand struct {
 	StartAt       time.Time `json:"start_at"`
 	GivenWords    []string  `json:"given_words"`
 	RecalledWords []string  `json:"recalled_words"`
+	Subtype       string    `json:"subtype"`
 }

@@ -22,7 +22,6 @@ func GetEvaluationQueryHandler(ctx context.Context, query GetEvaluationQuery,
 	languageFluencyRepository LFdomain.LanguageFluencyRepository,
 	visualSpatialRepository VPdomain.ResultRepository,
 ) (domain.Evaluation, error) {
-	//GET EVALUAtION BY ID
 	evaluation, err := evaluationsRepository.GetByID(ctx, query.EvaluationID)
 	if err != nil {
 		return domain.Evaluation{}, err

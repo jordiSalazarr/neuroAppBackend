@@ -43,7 +43,7 @@ type Evaluation struct {
 	CurrentStatus             EvaluationCurrentStatus `json:"currentStatus"`
 	LetterCancellationSubTest LCdomain.LettersCancellationSubtest
 	VisualMemorySubTest       VIMdomain.VisualMemorySubtest
-	VerbalmemorySubTest       VEMdomain.VerbalMemorySubtest
+	VerbalmemorySubTest       []VEMdomain.VerbalMemorySubtest
 	ExecutiveFunctionSubTest  []EFdomain.ExecutiveFunctionsSubtest
 	LanguageFluencySubTest    LFdomain.LanguageFluency
 	VisualSpatialSubTest      VPdomain.VisualSpatialSubtest

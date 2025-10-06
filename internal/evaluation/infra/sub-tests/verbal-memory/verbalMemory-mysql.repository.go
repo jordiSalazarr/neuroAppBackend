@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/aarondl/sqlboiler/v4/boil"
+	"github.com/aarondl/sqlboiler/v4/queries/qm"
 	"github.com/aarondl/sqlboiler/v4/types"
 	"neuro.app.jordi/database/dbmodels"
 	VEMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/verbal-memory"
@@ -18,7 +19,7 @@ type VerbalMemoryMYSQLRepository struct {
 
 type MockVerbalMemoryRepository struct{}
 
-var MockVerbalMemorySubtests []*VEMdomain.VerbalMemorySubtest = []*VEMdomain.VerbalMemorySubtest{
+var MockVerbalMemorySubtests []VEMdomain.VerbalMemorySubtest = []VEMdomain.VerbalMemorySubtest{
 	{
 		Pk:               "subtest1",
 		EvaluationID:     "eval1",
@@ -154,15 +155,38 @@ func (r VerbalMemoryMYSQLRepository) GetByID(ctx context.Context, id string) (VE
 	return DBToDomainVerbalMemory(dbVerbalMemorySubtest)
 }
 
-func (r VerbalMemoryMYSQLRepository) GetByEvaluationID(ctx context.Context, id string) (VEMdomain.VerbalMemorySubtest, error) {
-	dbVerbalMemorySubtest, err := dbmodels.VerbalMemorySubtests(
+func (r VerbalMemoryMYSQLRepository) GetByEvaluationID(ctx context.Context, id string) ([]VEMdomain.VerbalMemorySubtest, error) {
+	var out []VEMdomain.VerbalMemorySubtest
+
+	dbVerbalMemorySubtestImmediate, err := dbmodels.VerbalMemorySubtests(
 		dbmodels.VerbalMemorySubtestWhere.EvaluationID.EQ(id),
+		dbmodels.VerbalMemorySubtestWhere.Type.EQ(string(VEMdomain.VerbalMemorySubtypeImmediate)),
+		qm.OrderBy(dbmodels.VerbalMemorySubtestColumns.CreatedAt+" DESC"),
 	).One(ctx, r.Exec)
 	if err != nil {
-		return VEMdomain.VerbalMemorySubtest{}, nil
+		return nil, err
+	}
+	dbVerbalMemorySubtestDelayed, err := dbmodels.VerbalMemorySubtests(
+		dbmodels.VerbalMemorySubtestWhere.EvaluationID.EQ(id),
+		dbmodels.VerbalMemorySubtestWhere.Type.EQ(string(VEMdomain.VerbalMemorySubtypeDelayed)),
+		qm.OrderBy(dbmodels.VerbalMemorySubtestColumns.CreatedAt+" DESC"),
+	).One(ctx, r.Exec)
+	if err != nil {
+		return nil, err
 	}
 
-	return DBToDomainVerbalMemory(dbVerbalMemorySubtest)
+	immediateDomain, err := DBToDomainVerbalMemory(dbVerbalMemorySubtestImmediate)
+	if err != nil {
+		return nil, err
+	}
+	delayedDomain, err := DBToDomainVerbalMemory(dbVerbalMemorySubtestDelayed)
+	if err != nil {
+		return nil, err
+	}
+
+	out = append(out, immediateDomain)
+	out = append(out, delayedDomain)
+	return out, nil
 }
 
 func (r MockVerbalMemoryRepository) Save(ctx context.Context, subtest VEMdomain.VerbalMemorySubtest) error {
@@ -170,9 +194,9 @@ func (r MockVerbalMemoryRepository) Save(ctx context.Context, subtest VEMdomain.
 }
 
 func (r MockVerbalMemoryRepository) GetByID(ctx context.Context, id string) (VEMdomain.VerbalMemorySubtest, error) {
-	return *MockVerbalMemorySubtests[0], nil
+	return MockVerbalMemorySubtests[0], nil
 }
 
-func (r MockVerbalMemoryRepository) GetByEvaluationID(ctx context.Context, id string) (VEMdomain.VerbalMemorySubtest, error) {
-	return *MockVerbalMemorySubtests[0], nil
+func (r MockVerbalMemoryRepository) GetByEvaluationID(ctx context.Context, id string) ([]VEMdomain.VerbalMemorySubtest, error) {
+	return MockVerbalMemorySubtests, nil
 }

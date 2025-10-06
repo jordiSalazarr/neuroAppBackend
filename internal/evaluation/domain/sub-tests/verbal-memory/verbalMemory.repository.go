@@ -9,7 +9,7 @@ type VerbalMemoryRepository interface {
 	Save(ctx context.Context, subtest VerbalMemorySubtest) error
 	GetByID(ctx context.Context, id string) (VerbalMemorySubtest, error)
 
-	GetByEvaluationID(ctx context.Context, evaluationID string) (VerbalMemorySubtest, error)
+	GetByEvaluationID(ctx context.Context, evaluationID string) ([]VerbalMemorySubtest, error)
 }
 
 type InMemoryVerbalMemoryRepository struct {
@@ -49,18 +49,14 @@ func (r InMemoryVerbalMemoryRepository) Save(ctx context.Context, subtest Verbal
 }
 
 func (r InMemoryVerbalMemoryRepository) GetByID(ctx context.Context, id string) (VerbalMemorySubtest, error) {
-	// _, exists := r.data[id]
-	// if !exists {
-	// 	return VerbalMemorySubtest{}, errors.New("verbal memory subtest not found")
-	// }
 	return mock, nil
 }
 
-func (r InMemoryVerbalMemoryRepository) GetByEvaluationID(ctx context.Context, id string) (VerbalMemorySubtest, error) {
+func (r InMemoryVerbalMemoryRepository) GetByEvaluationID(ctx context.Context, id string) ([]VerbalMemorySubtest, error) {
 	for _, test := range r.data {
 		if test.EvaluationID == id {
-			return test, nil
+			return []VerbalMemorySubtest{test}, nil
 		}
 	}
-	return mock, nil
+	return []VerbalMemorySubtest{mock}, nil
 }

@@ -44,7 +44,7 @@ type VerbalMemoryScore struct {
 	PerseverationRate float64 `json:"perseverationRate"`
 }
 
-func NewVerbalMemorySubtest(evaluationID string, startAt time.Time, givenWords, recalledWords []string) (VerbalMemorySubtest, error) {
+func NewVerbalMemorySubtest(evaluationID string, startAt time.Time, givenWords, recalledWords []string, subTypeStr string) (VerbalMemorySubtest, error) {
 	if evaluationID == "" {
 		return VerbalMemorySubtest{}, errors.New("evaluationID es obligatorio")
 	}
@@ -56,10 +56,11 @@ func NewVerbalMemorySubtest(evaluationID string, startAt time.Time, givenWords, 
 		return VerbalMemorySubtest{}, errors.New("givenWords y recalledWords no pueden estar vacíos y como maximo 100 palabras")
 	}
 	var subType VerbalMemorySubtype
-	if timeSinceStart > ImmediateThreshold {
-		subType = VerbalMemorySubtypeDelayed
-	} else {
+	switch subTypeStr {
+	case "immediate":
 		subType = VerbalMemorySubtypeImmediate
+	case "delayed":
+		subType = VerbalMemorySubtypeDelayed
 	}
 	return VerbalMemorySubtest{
 		Pk:               uuid.New().String(),
