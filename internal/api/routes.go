@@ -22,6 +22,7 @@ import (
 	VIMdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-memory"
 	VPdomain "neuro.app.jordi/internal/evaluation/domain/sub-tests/visual-spatial"
 	"neuro.app.jordi/internal/evaluation/infra"
+	speechtotext "neuro.app.jordi/internal/evaluation/infra/speech-to-text"
 	EFinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/executive-functions"
 	LFinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/language-fluency"
 	LCinfra "neuro.app.jordi/internal/evaluation/infra/sub-tests/letter-cancellation"
@@ -69,6 +70,7 @@ type Services struct {
 	MailService       mail.MailProvider
 	JwtService        *jwtService.Service
 	EncryptionService authD.EncryptionService
+	SpeechToText      domain.SpeechToTextService
 	// TemplateResolver  VIMdomain.TemplateResolver
 	FileFormater fileformatter.FileFormaterService
 }
@@ -96,6 +98,7 @@ func getAppServices() Services {
 		LLMService:        services.NewOpenAIService(),
 		MailService:       mailService,
 		EncryptionService: encryption.NewEncryptionService(),
+		SpeechToText:      speechtotext.NewOpenAISpeechToText(),
 		JwtService:        jwtService.New(),
 		FileFormater:      fileformatter.NewWKHTMLFileFormatter(),
 	}

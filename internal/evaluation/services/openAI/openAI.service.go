@@ -107,6 +107,7 @@ DOMINIOS Y MÉTRICAS (resumen operativo)
    - Si hay muchos errores/correcciones (si están disponibles), indícalo.
 
 5) **Fluencia verbal — (p.ej., Semántica)**
+  En este test lo mas importante es la cantidad de palabras correctas producidas, así que menciónalo si o si.
    Métricas: Score(0–100), UniqueValid, WordsPerMinute, IntrusionRate, PerseverationRate.
    Déficit léxico/ejecutivo: ↓UniqueValid/WPM, ↑Intrusions/Perseverations.
 

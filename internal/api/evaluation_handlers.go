@@ -1,9 +1,15 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	createevaluation "neuro.app.jordi/internal/evaluation/application/commands/create-evaluation"
@@ -274,21 +280,160 @@ func (app *App) ExecutiveFunctionsSubtest(c *gin.Context) {
 }
 
 func (app *App) LanguageFluencySubtest(c *gin.Context) {
-	var command createlanguagefluencysubtest.CreateLanguageFluencySubtestCommand
-	if err := c.ShouldBindJSON(&command); err != nil {
-		app.Logger.Error(c.Request.Context(), "error parsing when creating language fluency evaluation", err, c.Keys)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	ct := c.ContentType()
+
+	switch ct {
+	case "multipart/form-data":
+		app.languageFluencyFromMultipart(c)
+	default: // JSON u otros -> intentamos JSON como hasta ahora
+		var command createlanguagefluencysubtest.CreateLanguageFluencySubtestCommand
+		if err := c.ShouldBindJSON(&command); err != nil {
+			app.Logger.Error(c.Request.Context(), "error parsing when creating language fluency evaluation (json path)", err, c.Keys)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		app.execLanguageFluencyCommand(c, command, "json")
+	}
+}
+
+func (app *App) languageFluencyFromMultipart(c *gin.Context) {
+	// 1) Límite de tamaño razonable
+	const maxBytes = 20 << 20 // 20 MiB
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBytes)
+
+	// 2) Leer archivo de audio
+	fileHeader, err := c.FormFile("audio")
+	if err != nil {
+		app.Logger.Error(c.Request.Context(), "missing audio file", err, c.Keys)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'audio' file"})
+		return
+	}
+	if fileHeader.Size == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "empty 'audio' file"})
+		return
+	}
+	f, err := fileHeader.Open()
+	if err != nil {
+		app.Logger.Error(c.Request.Context(), "cannot open audio", err, c.Keys)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot open audio file"})
+		return
+	}
+	defer f.Close()
+
+	audioBytes, err := io.ReadAll(f)
+	if err != nil {
+		app.Logger.Error(c.Request.Context(), "cannot read audio", err, c.Keys)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cannot read audio file"})
 		return
 	}
 
-	subtest, err := createlanguagefluencysubtest.CreateLanguageFluencySubtestCommandHandler(c.Request.Context(), command, app.Repositories.EvaluationsRepository, app.Services.LLMService, app.Repositories.LanguageFluencyRepository)
+	// 3) Leer payload JSON
+	var cmd createlanguagefluencysubtest.CreateLanguageFluencySubtestCommand
+	jsonStr := c.PostForm("payload")
+	if jsonStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'payload' JSON"})
+		return
+	}
+	if err := json.Unmarshal([]byte(jsonStr), &cmd); err != nil {
+		app.Logger.Error(c.Request.Context(), "invalid payload JSON", err, c.Keys)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'payload' JSON"})
+		return
+	}
+
+	// 4) STT
+	if app.Services.SpeechToText == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "speech-to-text service not configured"})
+		return
+	}
+	transcript, err := app.Services.SpeechToText.GetTextFromSpeech(audioBytes)
+
+	// limpiar buffer (no persistimos)
+	for i := range audioBytes {
+		audioBytes[i] = 0
+	}
 	if err != nil {
-		app.Logger.Error(c.Request.Context(), "error  when creating language fluency evaluation", err, c.Keys)
+		app.Logger.Error(c.Request.Context(), "speech-to-text error", err, c.Keys)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to transcribe audio"})
+		return
+	}
+
+	// 5) Extraer palabras
+	cmd.Words = extractWords(transcript)
+	// Defaults si no llegan (tu dominio los exige no vacíos)
+	if cmd.Duration == 0 {
+		cmd.Duration = 60
+	}
+	cmd.Language = "es"
+
+	cmd.Proficiency = "nativo"
+
+	cmd.Category = "animales"
+
+	app.execLanguageFluencyCommand(c, cmd, "audio+json")
+}
+
+func (app *App) execLanguageFluencyCommand(
+	c *gin.Context,
+	command createlanguagefluencysubtest.CreateLanguageFluencySubtestCommand,
+	inputSource string,
+) {
+	if strings.TrimSpace(command.EvaluationID) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "evaluationId is required"})
+		return
+	}
+	// Si quisieras forzar que haya palabras en el modo JSON:
+	// if len(command.Words) == 0 && inputSource == "json" {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "words are required in JSON path"})
+	// 	return
+	// }
+
+	subtest, err := createlanguagefluencysubtest.CreateLanguageFluencySubtestCommandHandler(
+		c.Request.Context(),
+		command,
+		app.Repositories.EvaluationsRepository,
+		app.Services.LLMService,
+		app.Repositories.LanguageFluencyRepository,
+	)
+	if err != nil {
+		// Envuelve errores de dominio comunes para devolver 400 en vez de 500 si aplica
+		if errors.Is(err, context.DeadlineExceeded) {
+			c.JSON(http.StatusGatewayTimeout, gin.H{"error": "timeout"})
+			return
+		}
+		app.Logger.Error(c.Request.Context(), "error when creating language fluency evaluation ("+inputSource+")", err, c.Keys)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"subtest": subtest})
+	c.JSON(http.StatusOK, gin.H{
+		"subtest":     subtest,
+		"inputSource": inputSource,
+	})
+}
+
+// --- util de tokenización sencilla orientada a ES ---
+// - minúsculas
+// - elimina todo lo no letra/apóstrofo
+// - separa por espacios colapsados
+func extractWords(s string) []string {
+	if s == "" {
+		return nil
+	}
+	s = strings.ToLower(s)
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		if unicode.IsLetter(r) || r == '\'' {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte(' ')
+		}
+	}
+	out := strings.Fields(b.String())
+	if len(out) == 0 {
+		return nil
+	}
+	return out
 }
 
 func (app *App) CreateVisualMemorySubtest(c *gin.Context) {
