@@ -10,6 +10,7 @@ import (
 	"github.com/aarondl/sqlboiler/v4/queries/qm"
 	"neuro.app.jordi/database/dbmodels"
 	"neuro.app.jordi/internal/evaluation/domain"
+	"neuro.app.jordi/internal/pkg/utils"
 )
 
 type EvaluationsMYSQLRepository struct {
@@ -119,7 +120,8 @@ func (m *EvaluationsMYSQLRepository) GetByID(ctx context.Context, id string) (do
 }
 
 func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDate time.Time, offset, limit int, searchTerm string, specialist_id string, onlyCompleted bool) ([]*domain.Evaluation, error) {
-
+	startOfDay := utils.GetStartOfDay(fromDate)
+	endOfDay := utils.GetEndOfDay(toDate)
 	var query []qm.QueryMod
 	defaultLimit := 30
 	if limit > defaultLimit {
@@ -128,8 +130,10 @@ func (f *EvaluationsMYSQLRepository) GetMany(ctx context.Context, fromDate, toDa
 	if specialist_id != "" {
 	}
 	query = append(query,
-		dbmodels.EvaluationWhere.CreatedAt.GTE(fromDate),
-		dbmodels.EvaluationWhere.CreatedAt.LTE(toDate),
+
+		dbmodels.EvaluationWhere.CreatedAt.GTE(startOfDay),
+		dbmodels.EvaluationWhere.CreatedAt.LTE(endOfDay),
+		qm.OrderBy(dbmodels.EvaluationColumns.CreatedAt+" DESC"),
 		qm.Offset(offset),
 		qm.Limit(limit),
 	)

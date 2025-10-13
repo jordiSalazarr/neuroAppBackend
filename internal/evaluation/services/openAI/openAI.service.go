@@ -181,7 +181,7 @@ No menciones que eres una IA ni el formato. No incluyas datos personales.`,
 }
 func (oa OpenAIService) Ask(prompt string) (string, error) {
 	resp, err := oa.client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
-		Model: openai.GPT4,
+		Model: openai.GPT4Dot1,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    openai.ChatMessageRoleSystem,
