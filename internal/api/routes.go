@@ -124,6 +124,7 @@ func (app *App) SetupRouter() *gin.Engine {
 	corsCfg := cors.Config{
 		AllowOrigins: []string{
 			"https://neuro-next-web-production.up.railway.app",
+			"https://neurosuite.eu",
 			"http://localhost:8400",
 		},
 		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
