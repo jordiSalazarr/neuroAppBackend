@@ -3,7 +3,6 @@ module neuro.app.jordi
 go 1.23.0
 
 require (
-	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.9.3
 	github.com/aarondl/null/v8 v8.1.3
 	github.com/aarondl/sqlboiler v3.7.1+incompatible
 	github.com/aarondl/sqlboiler/v4 v4.19.5
@@ -24,7 +23,10 @@ require (
 	golang.org/x/time v0.12.0
 )
 
-require github.com/yuin/goldmark v1.7.13
+require (
+	github.com/go-pdf/fpdf v0.9.0
+	github.com/yuin/goldmark v1.7.13
+)
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
