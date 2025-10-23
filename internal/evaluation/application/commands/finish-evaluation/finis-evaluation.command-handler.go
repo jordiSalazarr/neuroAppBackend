@@ -58,7 +58,15 @@ func FinisEvaluationCommanndHandler(
 		if err != nil {
 			fmt.Println("Error generating PDF:", err)
 		}
-		err = mailService.SendEmailWithAttachment(ctx, evaluation.SpecialistMail, "Informe de evaluación completado", "El informe de la evaluación para el paciente "+evaluation.PatientName+" ha sido completado. Adjunto encontrarás el informe en formato PDF.", "El informe de la evaluación para el paciente "+evaluation.PatientName+" ha sido completado.", pdfBytes)
+		err = mailService.SendEmailWithAttachment(
+			ctx,
+			evaluation.SpecialistMail,
+			"Informe de evaluación completado",
+			htmlContent,                  // htmlBody
+			"Adjunto el informe en PDF.", // textBody
+			"informe-"+evaluation.PatientName+".pdf", // attachmentName
+			pdfBytes,
+		)
 		if err != nil {
 			fmt.Println("Error sending email:", err)
 		}

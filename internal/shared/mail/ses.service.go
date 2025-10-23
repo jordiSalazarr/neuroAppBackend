@@ -5,12 +5,17 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"mime"
+	"mime/quotedprintable"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/google/uuid"
 )
 
 type SESEmailSender struct {
@@ -65,36 +70,89 @@ func (s *SESEmailSender) SendEmail(ctx context.Context, to string, subject strin
 	return err
 }
 
-func (s *SESEmailSender) SendEmailWithAttachment(ctx context.Context, to, subject, body string, attachmentName string, attachment []byte) error {
-	// MIME básico
-	var emailRaw bytes.Buffer
-	boundary := "NextPartBoundary"
+func (s *SESEmailSender) SendEmailWithAttachment(
+	ctx context.Context,
+	to, subject, htmlBody, textBody, attachmentName string,
+	attachment []byte,
+) error {
 
-	emailRaw.WriteString(fmt.Sprintf("From: %s\r\n", s.senderAddr))
-	emailRaw.WriteString(fmt.Sprintf("To: %s\r\n", to))
-	emailRaw.WriteString(fmt.Sprintf("Subject: %s\r\n", subject))
-	emailRaw.WriteString("MIME-Version: 1.0\r\n")
-	emailRaw.WriteString("Content-Type: multipart/mixed; boundary=" + boundary + "\r\n")
-	emailRaw.WriteString("\r\n--" + boundary + "\r\n")
-	emailRaw.WriteString("Content-Type: text/html; charset=utf-8\r\n")
-	emailRaw.WriteString("Content-Transfer-Encoding: 7bit\r\n\r\n")
-	emailRaw.WriteString(body + "\r\n")
+	// Encode Subject (RFC 2047)
+	encSubject := mime.QEncoding.Encode("utf-8", subject)
 
-	// Attachment
-	encoded := make([]byte, base64.StdEncoding.EncodedLen(len(attachment)))
-	base64.StdEncoding.Encode(encoded, attachment)
+	// Boundaries
+	mixedB := "MIX-" + uuid.NewString()
+	altB := "ALT-" + uuid.NewString()
 
-	emailRaw.WriteString("\r\n--" + boundary + "\r\n")
-	emailRaw.WriteString("Content-Type: application/pdf\r\n")
-	emailRaw.WriteString("Content-Disposition: attachment; filename=\"" + attachmentName + "\"\r\n")
-	emailRaw.WriteString("Content-Transfer-Encoding: base64\r\n\r\n")
-	emailRaw.Write(encoded)
-	emailRaw.WriteString("\r\n--" + boundary + "--")
+	var buf bytes.Buffer
 
-	input := &ses.SendRawEmailInput{
-		RawMessage: &types.RawMessage{Data: emailRaw.Bytes()},
+	// Headers
+	from := s.senderAddr
+	now := time.Now().UTC().Format(time.RFC1123Z)
+	msgID := fmt.Sprintf("<%s@%s>", uuid.NewString(), strings.SplitN(from, "@", 2)[1])
+
+	fmt.Fprintf(&buf, "From: %s\r\n", from)
+	fmt.Fprintf(&buf, "To: %s\r\n", to)
+	fmt.Fprintf(&buf, "Subject: %s\r\n", encSubject)
+	fmt.Fprintf(&buf, "Date: %s\r\n", now)
+	fmt.Fprintf(&buf, "Message-ID: %s\r\n", msgID)
+	fmt.Fprintf(&buf, "MIME-Version: 1.0\r\n")
+	fmt.Fprintf(&buf, "Content-Type: multipart/mixed; boundary=\"%s\"\r\n", mixedB)
+	fmt.Fprintf(&buf, "\r\n") // end headers
+
+	// ---- multipart/alternative (text + html)
+	fmt.Fprintf(&buf, "--%s\r\n", mixedB)
+	fmt.Fprintf(&buf, "Content-Type: multipart/alternative; boundary=\"%s\"\r\n\r\n", altB)
+
+	// text/plain (quoted-printable)
+	fmt.Fprintf(&buf, "--%s\r\n", altB)
+	fmt.Fprintf(&buf, "Content-Type: text/plain; charset=utf-8\r\n")
+	fmt.Fprintf(&buf, "Content-Transfer-Encoding: quoted-printable\r\n\r\n")
+	qpTxt := quotedprintable.NewWriter(&buf)
+	_, _ = qpTxt.Write([]byte(textBody))
+	_ = qpTxt.Close()
+	fmt.Fprintf(&buf, "\r\n")
+
+	// text/html (quoted-printable)
+	fmt.Fprintf(&buf, "--%s\r\n", altB)
+	fmt.Fprintf(&buf, "Content-Type: text/html; charset=utf-8\r\n")
+	fmt.Fprintf(&buf, "Content-Transfer-Encoding: quoted-printable\r\n\r\n")
+	qpHTML := quotedprintable.NewWriter(&buf)
+	_, _ = qpHTML.Write([]byte(htmlBody))
+	_ = qpHTML.Close()
+	fmt.Fprintf(&buf, "\r\n")
+
+	// cierre del alternative
+	fmt.Fprintf(&buf, "--%s--\r\n", altB)
+
+	// ---- Adjunto PDF (base64 con wrap 76)
+	fmt.Fprintf(&buf, "--%s\r\n", mixedB)
+	safeName := attachmentName
+	if safeName == "" {
+		safeName = "informe.pdf"
 	}
+	fmt.Fprintf(&buf, "Content-Type: application/pdf; name=\"%s\"\r\n", safeName)
+	fmt.Fprintf(&buf, "Content-Disposition: attachment; filename=\"%s\"\r\n", safeName)
+	fmt.Fprintf(&buf, "Content-Transfer-Encoding: base64\r\n\r\n")
 
+	b64 := base64.StdEncoding.EncodeToString(attachment)
+	// wrap a 76 chars por línea con CRLF
+	for i := 0; i < len(b64); i += 76 {
+		end := i + 76
+		if end > len(b64) {
+			end = len(b64)
+		}
+		buf.WriteString(b64[i:end])
+		buf.WriteString("\r\n")
+	}
+	fmt.Fprintf(&buf, "\r\n")
+
+	// cierre del mixed
+	fmt.Fprintf(&buf, "--%s--\r\n", mixedB)
+
+	// Envío SES
+	input := &ses.SendRawEmailInput{
+		RawMessage: &types.RawMessage{Data: buf.Bytes()},
+	}
 	_, err := s.client.SendRawEmail(ctx, input)
 	return err
 }
