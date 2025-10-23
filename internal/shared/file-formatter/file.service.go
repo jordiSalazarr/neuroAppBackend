@@ -3,6 +3,7 @@ package fileformatter
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"neuro.app.jordi/internal/evaluation/domain"
@@ -18,8 +19,9 @@ func NewWKHTMLFileFormatter() *WKHTMLFileFormatter {
 }
 
 func (f *WKHTMLFileFormatter) GenerateHTML(evaluation domain.Evaluation) (string, error) {
-	// Aquí puedes usar el resultado del OpenAIService para meterlo en un template HTML
+	// Convierte el análisis (markdown) a HTML simple
 	htmlAssistantAnalysis, _ := markdownToHTML(evaluation.AssistantAnalysis)
+
 	html := fmt.Sprintf(`
 		<html>
 		<head><meta charset="utf-8"><title>Informe NeuroApp</title></head>
@@ -33,51 +35,91 @@ func (f *WKHTMLFileFormatter) GenerateHTML(evaluation domain.Evaluation) (string
 		</body>
 		</html>
 	`, evaluation.PatientName, evaluation.SpecialistMail, htmlAssistantAnalysis)
+
 	return html, nil
 }
 
 func (f *WKHTMLFileFormatter) ConvertHTMLtoPDF(html string) ([]byte, error) {
-	// Config A4 en mm
+	// PDF A4 (mm)
 	pdf := fpdf.New("P", "mm", "A4", "")
-
-	// Márgenes
 	pdf.SetMargins(15, 15, 15)
 	pdf.SetAutoPageBreak(true, 15)
 	pdf.AddPage()
 
-	// Fuente UTF-8 (necesitas un TTF en tu repo; recomiendo DejaVu Sans)
-	// Coloca DejaVuSans.ttf en ./assets/fonts/DejaVuSans.ttf
-	pdf.AddUTF8Font("DejaVu", "", "assets/fonts/DejaVuSans.ttf")
+	// SIN ASSETS: fuentes core (Helvetica). Para tildes/ñ usamos traductor CP1252.
+	pdf.SetFont("Helvetica", "", 12)
+	tr := pdf.UnicodeTranslatorFromDescriptor("") // CP1252 (Latin-1 sup.)
 
-	pdf.AddUTF8Font("DejaVu", "B", "assets/fonts/DejaVuSans-Bold.ttf")
-	// si no tienes bold, puedes omitir y usar solo regular
+	// Sanea el HTML para HTMLBasic (parser básico)
+	clean := sanitizeForHTMLBasic(html)
 
-	pdf.SetFont("DejaVu", "", 12)
-
-	// fpdf.HTMLBasic es MUY básico; quita <html>, <head>, etc. si existen
-	clean := stripOuterHTML(html)
-
+	// Renderer HTML básico
 	ht := pdf.HTMLBasicNew()
-	// interlineado aproximado (altura de línea)
-	ht.Write(6, clean)
 
-	var buf bytes.Buffer
-	if err := pdf.Output(&buf); err != nil {
+	// Protege contra pánicos del parser
+	var out bytes.Buffer
+	var writeErr error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				writeErr = fmt.Errorf("pdf render failed: %v", r)
+			}
+		}()
+		// Importante: traducir el string antes de pasarlo a Write
+		ht.Write(6, tr(clean)) // 6 ≈ altura de línea
+	}()
+	if writeErr != nil {
+		return nil, writeErr
+	}
+
+	if err := pdf.Output(&out); err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), nil
+	return out.Bytes(), nil
 }
 
-func stripOuterHTML(s string) string {
-	// fpdf.HTMLBasic no necesita <html><body> y a veces le molestan estilos
-	// Limpieza muy simple:
-	s = strings.ReplaceAll(s, "<!doctype html>", "")
-	s = strings.ReplaceAll(strings.ToLower(s), "<html>", "")
-	s = strings.ReplaceAll(strings.ToLower(s), "</html>", "")
-	s = strings.ReplaceAll(strings.ToLower(s), "<head>", "")
-	s = strings.ReplaceAll(strings.ToLower(s), "</head>", "")
-	s = strings.ReplaceAll(strings.ToLower(s), "<body>", "")
-	s = strings.ReplaceAll(strings.ToLower(s), "</body>", "")
+// --- Helpers ---
+
+func sanitizeForHTMLBasic(s string) string {
+	// Trabajamos en minúsculas sólo para tags a limpiar (preserva texto)
+	l := strings.ToLower(s)
+
+	// Quita envoltorios que no necesita HTMLBasic
+	reMeta := regexp.MustCompile(`(?is)<meta[^>]*>`)
+	l = reMeta.ReplaceAllString(l, "")
+	removeExact := []string{"<!doctype html>", "<html>", "</html>", "<head>", "</head>", "<body>", "</body>"}
+	for _, tag := range removeExact {
+		l = strings.ReplaceAll(l, tag, "")
+	}
+
+	// <hr> → salto visual simple
+	l = strings.ReplaceAll(l, "<hr>", "\n\n")
+
+	// Normaliza strong/em a b/i (HTMLBasic entiende mejor B/I/U)
+	l = strings.ReplaceAll(l, "<strong>", "<b>")
+	l = strings.ReplaceAll(l, "</strong>", "</b>")
+	l = strings.ReplaceAll(l, "<em>", "<i>")
+	l = strings.ReplaceAll(l, "</em>", "</i>")
+
+	// Elimina <style> y <link> que no procesa
+	reStyle := regexp.MustCompile(`(?is)<style[^>]*>.*?</style>`)
+	l = reStyle.ReplaceAllString(l, "")
+	reLink := regexp.MustCompile(`(?is)<link[^>]*>`)
+	l = reLink.ReplaceAllString(l, "")
+
+	// Aplica cambios sobre el original preservando mayúsc./acentos
+	s = reMeta.ReplaceAllString(s, "")
+	for _, tag := range removeExact {
+		s = strings.ReplaceAll(strings.ReplaceAll(s, strings.ToLower(tag), ""), tag, "")
+	}
+	s = strings.ReplaceAll(s, "<hr>", "\n\n")
+	s = strings.ReplaceAll(s, "<strong>", "<b>")
+	s = strings.ReplaceAll(s, "</strong>", "</b>")
+	s = strings.ReplaceAll(s, "<em>", "<i>")
+	s = strings.ReplaceAll(s, "</em>", "</i>")
+	s = reStyle.ReplaceAllString(s, "")
+	s = reLink.ReplaceAllString(s, "")
+
 	return s
 }
 
