@@ -120,7 +120,9 @@ func (app *App) SetupRouter() *gin.Engine {
 	r := gin.New()
 	r.SetTrustedProxies(nil)
 	r.Use(gin.Logger(), gin.Recovery())
-
+	if os.Getenv("environment") != "local" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	corsCfg := cors.Config{
 		AllowOrigins: []string{
 			"https://neuro-next-web-production.up.railway.app",
